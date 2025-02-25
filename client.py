@@ -2,7 +2,7 @@ import mysql.connector
 from mysql.connector import Error
 import psutil
 import time
-import socket, platform
+import socket, platform, cpuinfo
 from datetime import datetime;
 
 # mycursor = mydb.cursor()
@@ -13,7 +13,7 @@ def menuInicial():
             input("Bem vindo ao client InnovaAir, digite uma opção para prosseguir:\n1. Realizar login\n2. Sair\n"))
         match (opcao):
             case 1:
-                email = input("Informe seu e-mail:\n")
+                email = input("\nInforme seu e-mail:\n")
                 senha = input("Informe sua senha:\n")
                 if (login(email, senha)):
                     home()
@@ -29,21 +29,55 @@ def menuInicial():
 
 def login(email, senha):
     # validacao no banco de dados
+
     return True
 
+
+def resgatarIdComputador():
+    # Recupera as informações de rede e endereços MAC
+    net_info = psutil.net_if_addrs()
+
+    for interface, addresses in net_info.items():
+        for address in addresses:
+            if address.family == psutil.AF_LINK:
+                mac_address = address.address
+                print(f"Verificando MAC Address: {mac_address}")
+
+                # Consulta o banco de dados para encontrar o computador com o MAC Address
+                consulta = "SELECT idComputador FROM computador WHERE endMac = '%s'" % mac_address
+                cursor.execute(consulta)
+                print("Executando a consulta: %s" % consulta)
+
+                # Recupera o resultado da consulta
+                myresult = cursor.fetchall()
+
+                if len(myresult) > 0:
+                    # Se o computador for encontrado, retorna o ID
+                    id_computador = myresult[0][0]  # Pega o primeiro resultado e a primeira coluna (idComputador)
+                    print(f"Máquina com MAC Address {mac_address} encontrada! ID: {id_computador}")
+                    return id_computador
+                else:
+                    print(f"Máquina com MAC Address {mac_address} ainda não cadastrada!")
+
+    print("Nenhum computador encontrado com os MAC Addresses disponíveis.")
+    return None
 
 def home():
     saiu = False
     while (saiu == False):
         opcao = int(input(
-            "Bem vindo ao client InnovaAir, digite uma opção para prosseguir: \n1. Iniciar captura de dados computacionais.\n2. Verificar informações do computador\n3. Sair\n"))
+            "\nBem vindo ao client InnovaAir, digite uma opção para prosseguir: \n1. Iniciar captura de dados computacionais.\n2. Verificar informações do computador\n3. Sair\n"))
         match (opcao):
             case 1:
-                capturarDados()
+                print("Verificando se a máquina já está cadastrada no banco de dados...")
+                cadastrada = verificarMaquinaCadastrada()
+                if (cadastrada):
+                    id_computador = resgatarIdComputador()
+                    capturarDados(id_computador)
             case 2:
                 exibirDadosComputacionais()
             case 3:
-                print("Até mais :)")
+                print("\nAté mais :)")
                 saiu = True
                 exit()
 
@@ -58,6 +92,65 @@ def get_first_mac_address():
 
     return None
 
+def cadastrarCPU(fkComputador):
+    print("\nCadastrando CPU...")
+    # capturando informações da CPU
+    # resgatando o modelo da CPU (atributo brand_raw do objeto de resposta)
+    modelo =  cpuinfo.get_cpu_info()['brand_raw']
+    # resgatando frequencia da CPU
+    frequencia_cpu = psutil.cpu_freq()
+    frequencia = frequencia_cpu.max
+    #resgatando cores
+    cores = psutil.cpu_count(True)
+
+    consulta = "INSERT INTO CPU (modelo, frequencia, cores, fkComputador) VALUES ('%s', %.2f, %d, %d)" % (modelo, frequencia, cores, fkComputador)
+    print("Executando a consulta SQL: '%s'", consulta)
+    cursor.execute(consulta)
+    mydb.commit()
+    id_cpu_cadastrada = cursor._last_insert_id
+    print("\nCPU de id %d cadastrado\n" % id_cpu_cadastrada)
+
+def cadastrarMemoria(fkComputador):
+    print("\nCadastrando memória...")
+    memoria_virtual = psutil.virtual_memory()
+    memoria_total = memoria_virtual.total
+
+    consulta = "INSERT INTO Memoria (tamanho, fkComputador) VALUES (%.2f, %d)" % ((memoria_total / (1024**3)), fkComputador)
+    print("Executando a consulta SQL: '%s'", consulta)
+    cursor.execute(consulta)
+    mydb.commit()
+
+    id_memoria_cadastrada = cursor._last_insert_id
+    print("memória de id %d cadastrado\n" % id_memoria_cadastrada)
+
+
+def cadastrarDiscos(fkComputador):
+    print("\nCadastrando discos...")
+
+    discos = psutil.disk_partitions(all=True)
+
+    for disco in discos:
+        # Obtém informações sobre o uso do disco
+        uso_disco = psutil.disk_usage(disco.mountpoint)
+
+        # Extrai as informações necessárias
+        capacidade = uso_disco.total / (1024 ** 3)  # Converte para GB
+        montagem = disco.mountpoint
+        sistema_arquivos = disco.fstype
+
+        consulta = """
+        INSERT INTO Disco (capacidade, montagem, sistemaArquivos, fkComputador)
+        VALUES (%.2f, "'%s'", '%s', %d)
+        """ % (capacidade, montagem, sistema_arquivos, fkComputador)
+
+        print("Executando a consulta: '%s'" % consulta)
+
+        cursor.execute(consulta)
+        mydb.commit()
+
+        id_disco_cadastrado = cursor.lastrowid
+        print("Disco de id %d cadastrado\n" % id_disco_cadastrado)
+
 
 def cadastrarMaquina():
     hostname = socket.gethostname()
@@ -67,12 +160,16 @@ def cadastrarMaquina():
     architecture = platform.machine()
     apelido = input('Digite um apelido para a máquina:\n')
     mac_address = get_first_mac_address()
-    print('Cadastrando a máquina no banco de dados:\nApelido: %s\nSistema Operacional: %s\nHostname: %s\nArquitetura: %s\nEndereço MAC %s' % (apelido, os_final, hostname, architecture, mac_address))
+    print('\nCadastrando a máquina no banco de dados:\nApelido: %s\nSistema Operacional: %s\nHostname: %s\nArquitetura: %s\nEndereço MAC %s' % (apelido, os_final, hostname, architecture, mac_address))
     consulta = "INSERT INTO Computador(apelido, endMac, sistemaOperacional, hostname, arquitetura, fkFilial) VALUES ('%s', '%s', '%s', '%s', '%s', 1)" % (apelido, mac_address,os_final, hostname, architecture)
     cursor.execute(consulta)
     mydb.commit()
-    print(cursor.rowcount, "registros inseridos.")
-    print("Computador cadastrado com sucesso")
+    id_computador_cadastrado = cursor._last_insert_id
+    print("Computador de id %d cadastrado" % id_computador_cadastrado)
+    print("\nCadastrando componentes do computador...")
+    cadastrarCPU(id_computador_cadastrado)
+    cadastrarMemoria(id_computador_cadastrado)
+    cadastrarDiscos(id_computador_cadastrado)
 
 def verificarMaquinaCadastrada():
     # recuperando MAC Address
@@ -86,70 +183,74 @@ def verificarMaquinaCadastrada():
                 myresult = cursor.fetchall()
                 if (len(myresult) > 0):
                     print("Máquina com MAC Address %s encontrada!" % address.address)
+                    return True
                 else:
                     print("Máquina ainda não cadastrada!")
                     cadastrarMaquina()
     return False
 
 
-def capturarDados():
-    print("Verificando se a máquina já está cadastrada no banco de dados...")
-    cadastrada = verificarMaquinaCadastrada()
-    if (cadastrada):
+
+def capturarDados(idComputador):
+    # Capturando ID das cpus e memorias associados
+    consulta_ids = """
+        SELECT 
+            CPU.idCpu, 
+            Memoria.idMemoria
+        FROM 
+            Computador
+        LEFT JOIN 
+            CPU ON Computador.idComputador = CPU.fkComputador
+        LEFT JOIN 
+            Memoria ON Computador.idComputador = Memoria.fkComputador
+        WHERE 
+            Computador.idComputador = %s;
+        """
+
+    # Executa a consulta para obter os IDs da CPU e da Memória
+    cursor.execute(consulta_ids, (idComputador,))
+    resultado_ids = cursor.fetchone()
+
+    id_cpu = None
+    id_memoria = None
+
+    if resultado_ids:
+        id_cpu, id_memoria = resultado_ids
+        print(f"ID da CPU associada: {id_cpu}")
+        print(f"ID da Memória associada: {id_memoria}")
         while True:
-            cpuPercent = format(psutil.cpu_percent())
-            memVirtualPerc = format(psutil.virtual_memory().percent)
-            redeBytesSent = psutil.net_io_counters().bytes_sent
-            redeBytesRecv = psutil.net_io_counters().bytes_recv
-            disco = psutil.disk_usage("C://").used / 1e+9
-            # Isso pode servir para ver se um computador de check-in ta transmitindo os dados de maneira correta
-            redePacksSent = psutil.net_io_counters().packets_sent
-            redePacksRecv = psutil.net_io_counters().packets_recv
-            mediaSent = redeBytesSent / redePacksSent if redePacksSent > 0 else 0
-            mediaRecv = redeBytesRecv / redePacksRecv if redePacksRecv > 0 else 0
-            uptimeSeconds = time.time() - psutil.boot_time()
-            # o time.time() pega o número de segundos que se passaram desde o "start" da época.
-            # a época seria 1º de janeiro de 1970, à meia-noite UTC (Coordinated Universal Time). Esse momento é conhecido como Unix Epoch.
-            # A escolha do 1º de janeiro de 1970 como a "época" tem a ver com a história do Unix, um sistema operacional criado nos anos 60 e 70. Aqui está um resumo:
-            # Ao usar segundos desde a época, o Unix poderia calcular facilmente o tempo com um número inteiro. Isso simplifica o uso e a precisão do tempo em sistemas com capacidade limitada de armazenamento e processamento (o que era uma preocupação no início da computação).
-            # o psutil.boot_time() retorna exatamente o momento em que o sistema foi iniciado ou reiniciado. Esse é o ponto de referência para medir quanto tempo o seu computador ficou ligado sem ser reiniciado.
-            uptimeHours = int(uptimeSeconds / 3600)
-            uptimeMinutes = int((uptimeSeconds % 3600) / 60)
-            uptimeSeconds = int(uptimeSeconds % 60)
 
-            totalHoras = format(f"{uptimeHours}h {uptimeMinutes}m {uptimeSeconds}s")
-            mediaSentf = format(f"{mediaSent:.2f}")
-            mediaRecvf = format(f"{mediaRecv:.2f}")
-            # % ajuda a pegar o "resto" (quantos segundos ou minutos restaram).
-            # 1 hora = 3600 segundos
-            # 1 minuto = 60 segundos
+            #CPU info
+            cpuPercent = psutil.cpu_percent()
+            #Memoria info
+            memVirtualPerc = psutil.virtual_memory().percent
+            memVirtualFree = psutil.virtual_memory().free / (1024**3)
+            memVirtualUsed = psutil.virtual_memory().used / (1024**3)
 
-            # o if aqui serve para, caso a quantidade de pacotes for 0, a conta não dar erro !! já que divir algo por 0 não da muito certo skjdksjd
+
 
             print("-------------------------------------------------------------")
-            print(f"Tamanho médio dos pacotes enviados: {mediaSent:.2f} bytes")
-            print(f"Tamanho médio dos pacotes recebidos: {mediaRecv:.2f} bytes")
             print(f"Porcentagem de memória vitual: {memVirtualPerc}%")
+            print(f"GB's de memória livre: {memVirtualFree}GB")
+            print(f"GB's de memória em uso: {memVirtualUsed}GB1"
+                  f"")
             print(f"Porcentagem de cpu sendo usada: {cpuPercent}%")
-            print(f"Tempo de Atividade: {totalHoras}")
-            print(f"Uso do disco: {disco:.2f}")
             print("-------------------------------------------------------------")
 
-            # sql = "INSERT INTO InfosComputer (fkComputador, pacotesRecv, pacotesEnv, memVirtual, cpuUsada, tempoAtvd, discoUso, horarioLog) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"
-            # print(f"Porcentagem de cpu sendo usada: {cpuPercent}%")
-            # val = ("1", mediaSent, mediaRecv, memVirtualPerc, cpuPercent, totalHoras, disco, datetime.now())
+            # Preparando consultas
+            consulta_cpu = "INSERT INTO metricaCPU (percentualUso, fkCpu) VALUES (%.2f, %d)" % (cpuPercent, id_cpu)
+            consulta_memoria = "INSERT INTO metricaMemoria (percentualUso, quantidadeLivre, quantidadeUsada, fkMemoria) VALUES (%.2f, %.2f, %.2f, %d)" % (memVirtualPerc, memVirtualFree, memVirtualUsed, id_memoria)
+            print("Executando consulta: %s\nExecutando consulta: %s" % (consulta_cpu, consulta_memoria))
 
-            # mycursor.execute(sql,val)
+            cursor.execute(consulta_cpu)
+            mydb.commit()
+            cursor.execute(consulta_memoria)
+            mydb.commit()
 
-            # mydb.commit()
 
-            # print(mycursor.rowcount, "record inserted.")
 
-            time.sleep(1)
-        # print(redeBytesSent)
-        # print(redeBytesRecv)
-        # print(redePacksSent)
-        # print(redePacksRecv)
+            time.sleep(3)
+
 
 def exibirDadosComputacionais():
     print("Buscando dados computacionais...")
