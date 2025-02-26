@@ -2,6 +2,7 @@ import mysql.connector
 from mysql.connector import Error
 import psutil
 import time
+import uuid
 import socket, platform, cpuinfo
 from datetime import datetime;
 
@@ -20,31 +21,44 @@ def menuInicial():
                     saiu = True
                 else:
                     print("Login ou senha inválidos, tente novamente!")
-
             case 2:
                 print("Até mais :)")
                 saiu = True
                 exit()
 
-
 def login(email, senha):
+    if email == 'teste@email.com' and senha == '123':
+        return True
+    else:
+        return False
     # validacao no banco de dados
+    # Consulta SQL para verificar se o usuário existe com o email e senha fornecidos
+    consulta = """
+      SELECT idUsuario FROM Usuario WHERE email = %s AND senha = %s;
+      """
+    try:
+        # Executa a consulta no banco de dados
+        cursor.execute(consulta, (email, senha))
 
-    return True
 
+        resultado = cursor.fetchone()
+
+        if resultado:
+            print("Usuário encontrado! Login válido.")
+            return True
+        else:
+            return False
+    except Exception as e:
+        print(f"Erro ao validar login: {e}")
+        return False
+
+def getUUID():
+    return uuid.UUID(int=uuid.getnode())
 
 def resgatarIdComputador():
-    # Recupera as informações de rede e endereços MAC
-    net_info = psutil.net_if_addrs()
-
-    for interface, addresses in net_info.items():
-        for address in addresses:
-            if address.family == psutil.AF_LINK:
-                mac_address = address.address
-                print(f"Verificando MAC Address: {mac_address}")
-
+                uuid = getUUID()
                 # Consulta o banco de dados para encontrar o computador com o MAC Address
-                consulta = "SELECT idComputador FROM computador WHERE endMac = '%s'" % mac_address
+                consulta = "SELECT idComputador FROM computador WHERE uuid = '%s'" % uuid
                 cursor.execute(consulta)
                 print("Executando a consulta: %s" % consulta)
 
@@ -53,14 +67,16 @@ def resgatarIdComputador():
 
                 if len(myresult) > 0:
                     # Se o computador for encontrado, retorna o ID
-                    id_computador = myresult[0][0]  # Pega o primeiro resultado e a primeira coluna (idComputador)
-                    print(f"Máquina com MAC Address {mac_address} encontrada! ID: {id_computador}")
+                    id_computador = myresult[0][0] 
+                    print(f"Máquina com UUID {uuid} encontrada! ID: {id_computador}")
                     return id_computador
                 else:
-                    print(f"Máquina com MAC Address {mac_address} ainda não cadastrada!")
+                    print(f"Máquina com UUID {uuid} ainda não cadastrada!")
 
-    print("Nenhum computador encontrado com os MAC Addresses disponíveis.")
-    return None
+                print("Nenhum computador encontrado com UUID cadastrado.")
+                return None
+
+
 
 def home():
     saiu = False
@@ -127,30 +143,33 @@ def cadastrarMemoria(fkComputador):
 def cadastrarDiscos(fkComputador):
     print("\nCadastrando discos...")
 
-    discos = psutil.disk_partitions(all=True)
+    discos = psutil.disk_partitions(all=False)
 
     for disco in discos:
-        # Obtém informações sobre o uso do disco
-        uso_disco = psutil.disk_usage(disco.mountpoint)
+        try: 
+            # Obtém informações sobre o uso do disco
+            uso_disco = psutil.disk_usage(disco.mountpoint)
 
-        # Extrai as informações necessárias
-        capacidade = uso_disco.total / (1024 ** 3)  # Converte para GB
-        montagem = disco.mountpoint
-        sistema_arquivos = disco.fstype
+            # Extrai as informações necessárias
+            capacidade = uso_disco.total / (1024 ** 3)  # Converte para GB
+            montagem = disco.mountpoint
+            sistema_arquivos = disco.fstype
 
-        consulta = """
-        INSERT INTO Disco (capacidade, montagem, sistemaArquivos, fkComputador)
-        VALUES (%.2f, "'%s'", '%s', %d)
-        """ % (capacidade, montagem, sistema_arquivos, fkComputador)
+            consulta = """
+            INSERT INTO Disco (capacidade, montagem, sistemaArquivos, fkComputador)
+            VALUES (%.2f, "'%s'", '%s', %d)
+            """ % (capacidade, montagem, sistema_arquivos, fkComputador)
 
-        print("Executando a consulta: '%s'" % consulta)
+            print("Executando a consulta: '%s'" % consulta)
 
-        cursor.execute(consulta)
-        mydb.commit()
+            cursor.execute(consulta)
+            mydb.commit()
 
-        id_disco_cadastrado = cursor.lastrowid
-        print("Disco de id %d cadastrado\n" % id_disco_cadastrado)
-
+            id_disco_cadastrado = cursor.lastrowid
+            print("Disco de id %d cadastrado\n" % id_disco_cadastrado)
+        except Exception as e:
+            print(e)
+        
 
 def cadastrarMaquina():
     hostname = socket.gethostname()
@@ -161,7 +180,7 @@ def cadastrarMaquina():
     apelido = input('Digite um apelido para a máquina:\n')
     mac_address = get_first_mac_address()
     print('\nCadastrando a máquina no banco de dados:\nApelido: %s\nSistema Operacional: %s\nHostname: %s\nArquitetura: %s\nEndereço MAC %s' % (apelido, os_final, hostname, architecture, mac_address))
-    consulta = "INSERT INTO Computador(apelido, endMac, sistemaOperacional, hostname, arquitetura, fkFilial) VALUES ('%s', '%s', '%s', '%s', '%s', 1)" % (apelido, mac_address,os_final, hostname, architecture)
+    consulta = "INSERT INTO Computador(apelido, UUID, sistemaOperacional, hostname, arquitetura, fkFilial) VALUES ('%s', '%s', '%s', '%s', '%s', 1)" % (apelido, mac_address,os_final, hostname, architecture)
     cursor.execute(consulta)
     mydb.commit()
     id_computador_cadastrado = cursor._last_insert_id
@@ -172,22 +191,17 @@ def cadastrarMaquina():
     cadastrarDiscos(id_computador_cadastrado)
 
 def verificarMaquinaCadastrada():
-    # recuperando MAC Address
-    net_info = psutil.net_if_addrs()
-    for interface, addresses in net_info.items():
-        for address in addresses:
-            if address.family == psutil.AF_LINK:
-                consulta = "SELECT * FROM computador WHERE endMac = '%s'" % address.address
+                consulta = "SELECT * FROM computador WHERE UUID = '%s'" % getUUID()
                 cursor.execute(consulta)
                 print("Executando a consulta: %s" % consulta)
                 myresult = cursor.fetchall()
                 if (len(myresult) > 0):
-                    print("Máquina com MAC Address %s encontrada!" % address.address)
+                    print("Máquina com UUID  %s encontrado!" % getUUID)
                     return True
                 else:
                     print("Máquina ainda não cadastrada!")
                     cadastrarMaquina()
-    return False
+                return False
 
 
 
@@ -246,9 +260,6 @@ def capturarDados(idComputador):
             mydb.commit()
             cursor.execute(consulta_memoria)
             mydb.commit()
-
-
-
             time.sleep(3)
 
 
@@ -268,21 +279,24 @@ def exibirDadosComputacionais():
     memoria_total = memoria_virtual.total
     print("A memória RAM total do sistema é %.2f GB" % (memoria_total / (1024 ** 3)))
 
+
     discos = psutil.disk_partitions()
     # Exibindo informações de todos os discos
     for disco in discos:
-        print("Disco encontrado com montagem em %s com o Filesystem %s possui %.2f GB de tamanho\n" % (
-        disco.device, disco.fstype, (psutil.disk_usage(disco.device).total / (1024 ** 3))))
+        try:
+            print("Disco encontrado com montagem em %s com o Filesystem %s possui %.2f GB de tamanho\n" % (
+            disco.device, disco.fstype, (psutil.disk_usage(disco.device).total / (1024 ** 3))))
+        except Exception as e:
+            print("Erro ao buscar disco: %s" % e)
 
 
 try:
     mydb = mysql.connector.connect(
         host="localhost",
-        user="pythoncollector",
-        password="pythonklyn123",
+        user="aluno",
+        password="sptech",
         database="innovair"
     )
-
     cursor = mydb.cursor()
 
     menuInicial()
