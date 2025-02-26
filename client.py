@@ -2,11 +2,9 @@ import mysql.connector
 from mysql.connector import Error
 import psutil
 import time
-import uuid
+import subprocess
 import socket, platform, cpuinfo
-from datetime import datetime;
 
-# mycursor = mydb.cursor()
 def menuInicial():
     saiu = False
     while (saiu == False):
@@ -52,13 +50,36 @@ def login(email, senha):
         print(f"Erro ao validar login: {e}")
         return False
 
-def getUUID():
-    return uuid.UUID(int=uuid.getnode())
+def obterSerialPlacaMae():
+    system = platform.system()
+    try:
+        if system == "Windows":
+            result = subprocess.check_output(
+                "wmic baseboard get serialnumber",
+                shell=True,
+                stderr=subprocess.STDOUT,
+                universal_newlines=True
+            )
+            serial = result.strip().split("\n")[-1].strip()
+        elif system == "Linux":
+            result = subprocess.check_output(
+                "sudo dmidecode -t baseboard | grep 'Serial Number'",
+                shell=True,
+                stderr=subprocess.STDOUT,
+                universal_newlines=True
+            )
+            serial = result.split(":")[-1].strip()
+        else:
+            raise Exception("Sistema operacional não suportado.")
+        return serial
+    except Exception as e:
+        print(f"Erro ao obter número de série da placa-mãe: {e}")
+        return None
 
 def resgatarIdComputador():
-                uuid = getUUID()
+                numeroSeriePlacaMae = obterSerialPlacaMae()
                 # Consulta o banco de dados para encontrar o computador com o MAC Address
-                consulta = "SELECT idComputador FROM computador WHERE uuid = '%s'" % uuid
+                consulta = "SELECT idComputador FROM computador WHERE numeroSeriePlacaMae = '%s'" % numeroSeriePlacaMae
                 cursor.execute(consulta)
                 print("Executando a consulta: %s" % consulta)
 
@@ -67,13 +88,12 @@ def resgatarIdComputador():
 
                 if len(myresult) > 0:
                     # Se o computador for encontrado, retorna o ID
-                    id_computador = myresult[0][0] 
-                    print(f"Máquina com UUID {uuid} encontrada! ID: {id_computador}")
+                    id_computador = myresult[0][0]
+                    print(f"Máquina encontrada no sistema.ID: {id_computador}")
                     return id_computador
                 else:
-                    print(f"Máquina com UUID {uuid} ainda não cadastrada!")
+                    print(f"Máquina não encontrada!")
 
-                print("Nenhum computador encontrado com UUID cadastrado.")
                 return None
 
 
@@ -96,17 +116,6 @@ def home():
                 print("\nAté mais :)")
                 saiu = True
                 exit()
-
-
-def get_first_mac_address():
-    interfaces = psutil.net_if_addrs()
-
-    for interfaces, addresses in interfaces.items():
-        for address in addresses:
-            if address.family == psutil.AF_LINK:
-                return address.address
-
-    return None
 
 def cadastrarCPU(fkComputador):
     print("\nCadastrando CPU...")
@@ -178,9 +187,9 @@ def cadastrarMaquina():
     os_final = os + " " + os_version
     architecture = platform.machine()
     apelido = input('Digite um apelido para a máquina:\n')
-    mac_address = get_first_mac_address()
-    print('\nCadastrando a máquina no banco de dados:\nApelido: %s\nSistema Operacional: %s\nHostname: %s\nArquitetura: %s\nEndereço MAC %s' % (apelido, os_final, hostname, architecture, mac_address))
-    consulta = "INSERT INTO Computador(apelido, UUID, sistemaOperacional, hostname, arquitetura, fkFilial) VALUES ('%s', '%s', '%s', '%s', '%s', 1)" % (apelido, mac_address,os_final, hostname, architecture)
+    numero_serie = obterSerialPlacaMae()
+    print('\nCadastrando a máquina no banco de dados:\nApelido: %s\nSistema Operacional: %s\nHostname: %s\nArquitetura: %s\nEndereço MAC %s' % (apelido, os_final, hostname, architecture, numero_serie))
+    consulta = "INSERT INTO Computador(apelido, numeroSeriePlacaMae, sistemaOperacional, hostname, arquitetura, fkFilial) VALUES ('%s', '%s', '%s', '%s', '%s', 1)" % (apelido, numero_serie,os_final, hostname, architecture)
     cursor.execute(consulta)
     mydb.commit()
     id_computador_cadastrado = cursor._last_insert_id
@@ -191,12 +200,12 @@ def cadastrarMaquina():
     cadastrarDiscos(id_computador_cadastrado)
 
 def verificarMaquinaCadastrada():
-                consulta = "SELECT * FROM computador WHERE UUID = '%s'" % getUUID()
+                consulta = "SELECT * FROM computador WHERE numeroSeriePlacaMae = '%s'" % obterSerialPlacaMae()
                 cursor.execute(consulta)
                 print("Executando a consulta: %s" % consulta)
                 myresult = cursor.fetchall()
                 if (len(myresult) > 0):
-                    print("Máquina com UUID  %s encontrado!" % getUUID)
+                    print("Máquina encontrada no sistema")
                     return True
                 else:
                     print("Máquina ainda não cadastrada!")
@@ -293,8 +302,8 @@ def exibirDadosComputacionais():
 try:
     mydb = mysql.connector.connect(
         host="localhost",
-        user="aluno",
-        password="sptech",
+        user="pythoncollector",
+        password="pythonklyn123",
         database="innovair"
     )
     cursor = mydb.cursor()
