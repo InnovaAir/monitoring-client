@@ -302,8 +302,8 @@ def exibirDadosComputacionais():
 try:
     mydb = mysql.connector.connect(
         host="localhost",
-        user="pythoncollector",
-        password="pythonklyn123",
+        user="superestagiario",
+        password="urubu100",
         database="innovair"
     )
     cursor = mydb.cursor()

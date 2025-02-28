@@ -112,7 +112,9 @@ CREATE TABLE IF NOT EXISTS `innovair`.`MetricaMemoria` (
     ON DELETE CASCADE
     ON UPDATE CASCADE);
 
-    CREATE TABLE IF NOT EXISTS `innovair`.`MetricaCPU` (
+select dataHora, percentualUso from MetricaCPU;
+select dataHora, percentualUso from MetricaCPU order by datahora desc limit 1;
+CREATE TABLE IF NOT EXISTS `innovair`.`MetricaCPU` (
   `idMetricaCPU` INT NOT NULL AUTO_INCREMENT,
   `dataHora` TIMESTAMP NULL DEFAULT current_timestamp,
   `percentualUso` DOUBLE NULL,
@@ -124,7 +126,7 @@ CREATE TABLE IF NOT EXISTS `innovair`.`MetricaMemoria` (
     REFERENCES `innovair`.`CPU` (`idCpu`)
     ON DELETE CASCADE
     ON UPDATE CASCADE);
-
+    
 CREATE TABLE IF NOT EXISTS `innovair`.`MetricaDisco` (
   `idMetricaDisco` INT NOT NULL AUTO_INCREMENT,
   `dataHora` TIMESTAMP NULL DEFAULT current_timestamp,
@@ -141,7 +143,7 @@ CREATE TABLE IF NOT EXISTS `innovair`.`MetricaDisco` (
     ON UPDATE CASCADE);
 
 
-    INSERT INTO `innovair`.`Cliente` (`razaoSocial`, `CNPJ`, `email`, `telefone`, `resposanvel`)
+INSERT INTO `innovair`.`Cliente` (`razaoSocial`, `CNPJ`, `email`, `telefone`, `resposanvel`)
 VALUES
 ('InovAir Soluções em TI', '12345678000199', 'contato@inovair.com', '11987654321', 'João Silva'),
 ('AeroTech Consultoria', '98765432000111', 'contato@aerotech.com', '21987654321', 'Maria Oliveira'),
@@ -161,7 +163,79 @@ VALUES
 
 
 
+-- Inserindo dados fictícios na tabela MetricaCPU
+INSERT INTO `innovair`.`MetricaCPU` (`percentualUso`, `fkCpu`)
+VALUES
+(45.2, 1),
+(50.8, 1),
+(38.5, 1),
+(60.3, 1),
+(72.1, 1);
+
+-- Inserindo dados fictícios na tabela MetricaMemoria
+INSERT INTO `innovair`.`MetricaMemoria` (`percentualUso`, `quantidadeLivre`, `quantidadeUsada`, `fkMemoria`)
+VALUES
+(55.4, 4.5, 5.5, 1),
+(60.1, 3.8, 6.2, 1),
+(47.9, 5.3, 4.7, 1),
+(70.6, 2.9, 7.1, 1),
+(80.2, 2.1, 7.9, 1);
+
+-- Inserindo dados fictícios na tabela MetricaDisco
+INSERT INTO `innovair`.`MetricaDisco` (`percentualUso`, `quantidadeLivre`, `quantidadeUsada`, `fkDisco`)
+VALUES
+(40.2, 100.5, 67.8, 1),
+(55.8, 80.3, 90.1, 1),
+(72.6, 60.0, 120.4, 1),
+(81.3, 45.2, 135.6, 1),
+(92.7, 25.6, 154.3, 1);
 
 
+-- Inserindo CPU para o Computador 1
+INSERT INTO `innovair`.`CPU` (`modelo`, `frequencia`, `cores`, `fkComputador`)
+VALUES ('Intel Core i7', 3.6, 8, 1);
 
+-- Inserindo Memória para o Computador 1
+INSERT INTO `innovair`.`Memoria` (`tamanho`, `fkComputador`)
+VALUES (16, 1);
+
+-- Inserindo Disco para o Computador 1
+INSERT INTO `innovair`.`Disco` (`tipo`, `capacidade`, `montagem`, `sistemaArquivos`, `fkComputador`)
+VALUES ('SSD', 512, '/dev/sda1', 'NTFS', 1);
+
+SELECT dataHora , percentualUso FROM MetricaMemoria;
+SELECT dataHora, quantidadeLivre , quantidadeUsada FROM MetricaMemoria;
+
+SELECT dataHora , percentualUso  FROM MetricaCPU;
+
+
+SELECT dataHora, percentualUso FROM MetricaDisco;
+                                
+SELECT dataHora, quantidadeLivre ,  quantidadeUsada FROM MetricaDisco;
+
+
+SELECT 'Memória' AS Componente,  mm.percentualUso AS mediaPercentual , mm.dataHora as Horario
+                                FROM MetricaMemoria mm
+                                UNION ALL
+                                SELECT 'Disco',  md.percentualUso, md.dataHora as Horario
+                                FROM MetricaDisco md
+                                UNION ALL
+                                SELECT 'CPU', mc.percentualUso, mc.dataHora as Horario
+                                FROM MetricaCPU mc;
+                                
+SELECT 'Memória' AS Componente, mm.quantidadeLivre AS mediaLivre, mm.quantidadeUsada AS mediaUsada , mm.dataHora as Horario
+                                FROM MetricaMemoria mm
+                                UNION ALL
+                                SELECT 'Disco', md.quantidadeLivre, md.quantidadeUsada, md.dataHora as Horario
+                                FROM MetricaDisco md;
+
+SELECT * FROM MetricaDisco;
     
+    select * from MetricaDisco;
+    
+SELECT md.dataHora, md.quantidadeLivre, md.quantidadeUsada
+													FROM MetricaDisco md
+													JOIN Disco d ON md.fkDisco = d.idDisco
+													JOIN Computador c ON d.fkComputador = c.idComputador
+													WHERE c.idComputador = 1
+													ORDER BY md.dataHora DESC;
