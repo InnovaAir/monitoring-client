@@ -50,7 +50,7 @@ def login(email, senha):
         print(f"Erro ao validar login: {e}")
         return False
 
-def obterSerialPlacaMae():
+def obter_numero_serie_placa_mae():
     system = platform.system()
     try:
         if system == "Windows":
@@ -69,17 +69,25 @@ def obterSerialPlacaMae():
                 universal_newlines=True
             )
             serial = result.split(":")[-1].strip()
+        elif system == "Darwin":  
+            result = subprocess.check_output(
+                "system_profiler SPHardwareDataType | grep 'Serial Number (system)'",
+                shell=True,
+                stderr=subprocess.STDOUT,
+                universal_newlines=True
+            )
+            serial = result.split(":")[-1].strip()
         else:
             raise Exception("Sistema operacional não suportado.")
+        
         return serial
     except Exception as e:
         print(f"Erro ao obter número de série da placa-mãe: {e}")
         return None
-
 def resgatarIdComputador():
                 numeroSeriePlacaMae = obterSerialPlacaMae()
-                # Consulta o banco de dados para encontrar o computador com o MAC Address
-                consulta = "SELECT idComputador FROM computador WHERE numeroSeriePlacaMae = '%s'" % numeroSeriePlacaMae
+                # Consulta o banco de dados para encontrar o Computador com o MAC Address
+                consulta = "SELECT idComputador FROM Computador WHERE numeroSeriePlacaMae = '%s'" % numeroSeriePlacaMae
                 cursor.execute(consulta)
                 print("Executando a consulta: %s" % consulta)
 
@@ -87,10 +95,10 @@ def resgatarIdComputador():
                 myresult = cursor.fetchall()
 
                 if len(myresult) > 0:
-                    # Se o computador for encontrado, retorna o ID
-                    id_computador = myresult[0][0]
-                    print(f"Máquina encontrada no sistema.ID: {id_computador}")
-                    return id_computador
+                    # Se o Computador for encontrado, retorna o ID
+                    id_Computador = myresult[0][0]
+                    print(f"Máquina encontrada no sistema.ID: {id_Computador}")
+                    return id_Computador
                 else:
                     print(f"Máquina não encontrada!")
 
@@ -102,14 +110,14 @@ def home():
     saiu = False
     while (saiu == False):
         opcao = int(input(
-            "\nBem vindo ao client InnovaAir, digite uma opção para prosseguir: \n1. Iniciar captura de dados computacionais.\n2. Verificar informações do computador\n3. Sair\n"))
+            "\nBem vindo ao client InnovaAir, digite uma opção para prosseguir: \n1. Iniciar captura de dados computacionais.\n2. Verificar informações do Computador\n3. Sair\n"))
         match (opcao):
             case 1:
                 print("Verificando se a máquina já está cadastrada no banco de dados...")
                 cadastrada = verificarMaquinaCadastrada()
                 if (cadastrada):
-                    id_computador = resgatarIdComputador()
-                    capturarDados(id_computador)
+                    id_Computador = resgatarIdComputador()
+                    capturarDados(id_Computador)
             case 2:
                 exibirDadosComputacionais()
             case 3:
@@ -149,36 +157,164 @@ def cadastrarMemoria(fkComputador):
     print("memória de id %d cadastrado\n" % id_memoria_cadastrada)
 
 
-def cadastrarDiscos(fkComputador):
+def cadastrarDiscos(fkComputador, cursor, mydb):
     print("\nCadastrando discos...")
 
-    discos = psutil.disk_partitions(all=False)
+    system = platform.system()
+    windows_version = platform.version()  # Obtém a versão do Windows, por exemplo, '10.0.19042' para Windows 10 ou '10.0.22000' para Windows 11
+    
+    if system == "Darwin":  # Se for macOS
+        try:
+            # Usando 'diskutil list' para obter as partições e discos no macOS
+            result = subprocess.check_output(
+                "diskutil list",
+                shell=True,
+                stderr=subprocess.STDOUT,
+                universal_newlines=True
+            )
+            
+            # Filtrando a saída do 'diskutil list' para extrair discos e partições
+            # A saída do 'diskutil list' precisa ser processada para pegar discos válidos.
+            print("Informações dos discos no macOS:")
+            discos_info = result.splitlines()
+            for line in discos_info:
+                # Exemplo de validação simples para encontrar discos, pode ser adaptado conforme necessário
+                if "/dev/" in line:  # Validar que é um disco
+                    disco_nome = line.split()[0]  # Pega o nome do dispositivo (ex: /dev/disk1)
+                    capacidade = 0  # No macOS, podemos capturar mais dados, mas aqui simplificamos.
+                    sistema_arquivos = "HFS+"  # A maioria dos sistemas de arquivos no macOS é HFS+ ou APFS
 
-    for disco in discos:
-        try: 
-            # Obtém informações sobre o uso do disco
-            uso_disco = psutil.disk_usage(disco.mountpoint)
+                    # Consulta SQL para inserir as informações no banco de dados
+                    consulta = """
+                    INSERT INTO Disco (capacidade, montagem, sistemaArquivos, fkComputador)
+                    VALUES (%s, %s, %s, %s)
+                    """
+                    parametros = (capacidade, disco_nome, sistema_arquivos, fkComputador)
 
-            # Extrai as informações necessárias
-            capacidade = uso_disco.total / (1024 ** 3)  # Converte para GB
-            montagem = disco.mountpoint
-            sistema_arquivos = disco.fstype
+                    print(f"Executando a consulta para cadastrar o disco: {disco_nome}...")
 
-            consulta = """
-            INSERT INTO Disco (capacidade, montagem, sistemaArquivos, fkComputador)
-            VALUES (%.2f, "'%s'", '%s', %d)
-            """ % (capacidade, montagem, sistema_arquivos, fkComputador)
+                    cursor.execute(consulta, parametros)
+                    mydb.commit()
 
-            print("Executando a consulta: '%s'" % consulta)
-
-            cursor.execute(consulta)
-            mydb.commit()
-
-            id_disco_cadastrado = cursor.lastrowid
-            print("Disco de id %d cadastrado\n" % id_disco_cadastrado)
+                    id_disco_cadastrado = cursor.lastrowid
+                    print(f"Disco de id {id_disco_cadastrado} cadastrado com sucesso no macOS!\n")
+                    
         except Exception as e:
-            print(e)
+            print(f"Erro ao buscar ou cadastrar discos no macOS: {e}")
+    
+    elif system == "Windows":  # Se for Windows (verificando versão)
+        try:
+            if "10" in windows_version:  # Caso seja Windows 10
+                print("Sistema operacional: Windows 10")
+                # Usando 'wmic' para Windows 10
+                result = subprocess.check_output(
+                    'wmic baseboard get serialnumber',
+                    shell=True,
+                    stderr=subprocess.STDOUT,
+                    universal_newlines=True
+                )
+                serial = result.strip().split("\n")[-1].strip()
+                print(f"Número de série da placa-mãe no Windows 10: {serial}")
+
+            elif "11" in windows_version:  
+                print("Sistema operacional: Windows 11")
+                # Usando PowerShell para Windows 11
+                result = subprocess.check_output(
+                    'powershell Get-CimInstance -ClassName Win32_BaseBoard | Select-Object -ExpandProperty SerialNumber',
+                    shell=True,
+                    stderr=subprocess.STDOUT,
+                    universal_newlines=True
+                )
+                serial = result.strip()
+                print(f"Número de série da placa-mãe no Windows 11: {serial}")
+            else:
+                print("Sistema operacional não identificado corretamente.")
+                serial = None
+
+            # Agora, coletando os discos no Windows usando psutil
+            discos = psutil.disk_partitions(all=False)
+            for disco in discos:
+                try:
+                    # Verifica se o ponto de montagem está válido
+                    if not disco.mountpoint or not disco.fstype:
+                        print(f"Disco em {disco.device} com montagem {disco.mountpoint} e sistema de arquivos {disco.fstype} é inválido. Ignorando.")
+                        continue
+
+                    # Obtém informações sobre o uso do disco
+                    uso_disco = psutil.disk_usage(disco.mountpoint)
+
+                    # Extrai as informações necessárias
+                    capacidade = uso_disco.total / (1024 ** 3)  # Converte para GB
+                    montagem = disco.mountpoint
+                    sistema_arquivos = disco.fstype
+
+                    # Verifica se a capacidade do disco é válida
+                    if capacidade <= 0:
+                        print(f"O disco em {montagem} possui capacidade inválida ({capacidade} GB). Ignorando.")
+                        continue
+
+                    # Consulta SQL para inserir as informações no banco de dados
+                    consulta = """
+                    INSERT INTO Disco (capacidade, montagem, sistemaArquivos, fkComputador)
+                    VALUES (%s, %s, %s, %s)
+                    """
+                    parametros = (capacidade, montagem, sistema_arquivos, fkComputador)
+
+                    # Executa a consulta no banco de dados
+                    print(f"Executando a consulta para cadastrar o disco em {montagem}...")
+
+                    cursor.execute(consulta, parametros)
+                    mydb.commit()
+
+                    id_disco_cadastrado = cursor.lastrowid
+                    print(f"Disco de id {id_disco_cadastrado} cadastrado com sucesso!\n")
+                except Exception as e:
+                    print(f"Erro ao cadastrar o disco: {e}")
         
+        except Exception as e:
+            print(f"Erro ao obter o número de série da placa-mãe ou ao buscar discos no Windows: {e}")
+
+    else:
+        # Para sistemas não-macOS, usa-se psutil para capturar as partições
+        discos = psutil.disk_partitions(all=False)
+
+        for disco in discos:
+            try:
+                # Verifica se o ponto de montagem está válido
+                if not disco.mountpoint or not disco.fstype:
+                    print(f"Disco em {disco.device} com montagem {disco.mountpoint} e sistema de arquivos {disco.fstype} é inválido. Ignorando.")
+                    continue
+
+                # Obtém informações sobre o uso do disco
+                uso_disco = psutil.disk_usage(disco.mountpoint)
+
+                # Extrai as informações necessárias
+                capacidade = uso_disco.total / (1024 ** 3)  # Converte para GB
+                montagem = disco.mountpoint
+                sistema_arquivos = disco.fstype
+
+                # Verifica se a capacidade do disco é válida
+                if capacidade <= 0:
+                    print(f"O disco em {montagem} possui capacidade inválida ({capacidade} GB). Ignorando.")
+                    continue
+
+                # Consulta SQL para inserir as informações no banco de dados
+                consulta = """
+                INSERT INTO Disco (capacidade, montagem, sistemaArquivos, fkComputador)
+                VALUES (%s, %s, %s, %s)
+                """
+                parametros = (capacidade, montagem, sistema_arquivos, fkComputador)
+
+                # Executa a consulta no banco de dados
+                print(f"Executando a consulta para cadastrar o disco em {montagem}...")
+
+                cursor.execute(consulta, parametros)
+                mydb.commit()
+
+                id_disco_cadastrado = cursor.lastrowid
+                print(f"Disco de id {id_disco_cadastrado} cadastrado com sucesso!\n")
+            except Exception as e:
+                print(f"Erro ao cadastrar o disco: {e}")
 
 def cadastrarMaquina():
     hostname = socket.gethostname()
@@ -192,15 +328,15 @@ def cadastrarMaquina():
     consulta = "INSERT INTO Computador(apelido, numeroSeriePlacaMae, sistemaOperacional, hostname, arquitetura, fkFilial) VALUES ('%s', '%s', '%s', '%s', '%s', 1)" % (apelido, numero_serie,os_final, hostname, architecture)
     cursor.execute(consulta)
     mydb.commit()
-    id_computador_cadastrado = cursor._last_insert_id
-    print("Computador de id %d cadastrado" % id_computador_cadastrado)
-    print("\nCadastrando componentes do computador...")
-    cadastrarCPU(id_computador_cadastrado)
-    cadastrarMemoria(id_computador_cadastrado)
-    cadastrarDiscos(id_computador_cadastrado)
+    id_Computador_cadastrado = cursor._last_insert_id
+    print("Computador de id %d cadastrado" % id_Computador_cadastrado)
+    print("\nCadastrando componentes do Computador...")
+    cadastrarCPU(id_Computador_cadastrado)
+    cadastrarMemoria(id_Computador_cadastrado)
+    cadastrarDiscos(id_Computador_cadastrado)
 
 def verificarMaquinaCadastrada():
-                consulta = "SELECT * FROM computador WHERE numeroSeriePlacaMae = '%s'" % obterSerialPlacaMae()
+                consulta = "SELECT * FROM Computador WHERE numeroSeriePlacaMae = '%s'" % obterSerialPlacaMae()
                 cursor.execute(consulta)
                 print("Executando a consulta: %s" % consulta)
                 myresult = cursor.fetchall()
@@ -261,8 +397,8 @@ def capturarDados(idComputador):
             print("-------------------------------------------------------------")
 
             # Preparando consultas
-            consulta_cpu = "INSERT INTO metricaCPU (percentualUso, fkCpu) VALUES (%.2f, %d)" % (cpuPercent, id_cpu)
-            consulta_memoria = "INSERT INTO metricaMemoria (percentualUso, quantidadeLivre, quantidadeUsada, fkMemoria) VALUES (%.2f, %.2f, %.2f, %d)" % (memVirtualPerc, memVirtualFree, memVirtualUsed, id_memoria)
+            consulta_cpu = "INSERT INTO MetricaCPU (percentualUso, fkCpu) VALUES (%.2f, %d)" % (cpuPercent, id_cpu)
+            consulta_memoria = "INSERT INTO MetricaMemoria (percentualUso, quantidadeLivre, quantidadeUsada, fkMemoria) VALUES (%.2f, %.2f, %.2f, %d)" % (memVirtualPerc, memVirtualFree, memVirtualUsed, id_memoria)
             print("Executando consulta: %s\nExecutando consulta: %s" % (consulta_cpu, consulta_memoria))
 
             cursor.execute(consulta_cpu)
