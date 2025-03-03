@@ -50,7 +50,7 @@ def login(email, senha):
         print(f"Erro ao validar login: {e}")
         return False
 
-def obter_numero_serie_placa_mae():
+def obterSerialPlacaMae():
     system = platform.system()
     try:
         if system == "Windows":
@@ -157,7 +157,7 @@ def cadastrarMemoria(fkComputador):
     print("memória de id %d cadastrado\n" % id_memoria_cadastrada)
 
 
-def cadastrarDiscos(fkComputador, cursor, mydb):
+def cadastrarDiscos(fkComputador):
     print("\nCadastrando discos...")
 
     system = platform.system()
@@ -438,8 +438,8 @@ def exibirDadosComputacionais():
 try:
     mydb = mysql.connector.connect(
         host="localhost",
-        user="aluno",
-        password="sptech",
+        user="superestagiario",
+        password="urubu100",
         database="innovair"
     )
     cursor = mydb.cursor()
