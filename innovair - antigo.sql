@@ -1,7 +1,7 @@
-create database innovair;
-use innovair;
+create database innovaair;
+use innovaair;
 
-CREATE TABLE IF NOT EXISTS `innovair`.`Cliente` (
+CREATE TABLE IF NOT EXISTS `innovaair`.`Cliente` (
   `idCliente` INT NOT NULL AUTO_INCREMENT,
   `razaoSocial` VARCHAR(105) NULL,
   `CNPJ` CHAR(14) NULL,
@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS `innovair`.`Cliente` (
   `resposanvel` VARCHAR(50) NULL,
   PRIMARY KEY (`idCliente`));
 
-  CREATE TABLE IF NOT EXISTS `innovair`.`Usuario` (
+  CREATE TABLE IF NOT EXISTS `innovaair`.`Usuario` (
   `idUsuario` INT NOT NULL AUTO_INCREMENT,
   `nome` VARCHAR(45) NULL,
   `tipoUsuario` TINYINT NULL,
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS `innovair`.`Cliente` (
     ON DELETE CASCADE
     ON UPDATE CASCADE);
 
-    CREATE TABLE IF NOT EXISTS `innovair`.`Filial` (
+    CREATE TABLE IF NOT EXISTS `innovaair`.`Filial` (
   `idFilial` INT NOT NULL AUTO_INCREMENT,
   `aeroporto` VARCHAR(50) NULL,
   `terminal` VARCHAR(30) NULL,
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS `innovair`.`Cliente` (
     ON DELETE CASCADE
     ON UPDATE CASCADE);
 
-CREATE TABLE IF NOT EXISTS `innovair`.`Computador` (
+CREATE TABLE IF NOT EXISTS `innovaair`.`Computador` (
   `idComputador` INT NOT NULL AUTO_INCREMENT,
   `apelido` VARCHAR(100) NULL,
   `numeroSeriePlacaMae` VARCHAR(100) NULL,
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS `innovair`.`Computador` (
     ON DELETE CASCADE
     ON UPDATE CASCADE);
 
-    CREATE TABLE IF NOT EXISTS `innovair`.`CPU` (
+    CREATE TABLE IF NOT EXISTS `innovaair`.`CPU` (
   `idCpu` INT NOT NULL AUTO_INCREMENT,
   `modelo` VARCHAR(45) NULL,
   `frequencia` DOUBLE NULL,
@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS `innovair`.`Computador` (
     ON DELETE CASCADE
     ON UPDATE CASCADE);
 
-CREATE TABLE IF NOT EXISTS `innovair`.`Disco` (
+CREATE TABLE IF NOT EXISTS `innovaair`.`Disco` (
   `idDisco` INT NOT NULL AUTO_INCREMENT,
   `tipo` CHAR(3) NULL,
   `capacidade` DOUBLE NULL,
@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS `innovair`.`Disco` (
     ON UPDATE CASCADE);
 
 
-CREATE TABLE IF NOT EXISTS `innovair`.`Memoria` (
+CREATE TABLE IF NOT EXISTS `innovaair`.`Memoria` (
   `idMemoria` INT NOT NULL AUTO_INCREMENT,
   `tamanho` DOUBLE NULL,
   `fkComputador` INT NOT NULL,
@@ -97,51 +97,44 @@ CREATE TABLE IF NOT EXISTS `innovair`.`Memoria` (
     ON DELETE CASCADE
     ON UPDATE CASCADE);
 
-CREATE TABLE IF NOT EXISTS `innovair`.`MetricaMemoria` (
-  `idMetricaMemoria` INT NOT NULL AUTO_INCREMENT,
-  `dataHora` TIMESTAMP NULL DEFAULT current_timestamp,
-  `percentualUso` DOUBLE NULL,
-  `quantidadeLivre` DOUBLE NULL,
-  `quantidadeUsada` DOUBLE NULL,
-  `fkMemoria` INT NOT NULL,
-  PRIMARY KEY (`idMetricaMemoria`, `fkMemoria`),
-  INDEX `fk_MetricaMemoria_Memoria1_idx` (`fkMemoria` ASC) VISIBLE,
-  CONSTRAINT `fk_MetricaMemoria_Memoria1`
-    FOREIGN KEY (`fkMemoria`)
-    REFERENCES `innovair`.`Memoria` (`idMemoria`)
+CREATE TABLE IF NOT EXISTS `innovaair`.`Regra` (
+  `fkComputador` INT NOT NULL,
+  `fkMetrica` INT NOT NULL,
+  `minimo` DOUBLE NULL,
+  `maximo` DOUBLE NULL,
+  PRIMARY KEY (`fkComputador`, `fkMetrica`),
+  INDEX `fk_Computador_has_Metrica_Metrica1_idx` (`fkMetrica` ASC) VISIBLE,
+  INDEX `fk_Computador_has_Metrica_Computador1_idx` (`fkComputador` ASC) VISIBLE,
+  CONSTRAINT `fk_Computador_has_Metrica_Computador1`
+    FOREIGN KEY (`fkComputador`)
+    REFERENCES `innovaair`.`Computador` (`idComputador`)
     ON DELETE CASCADE
-    ON UPDATE CASCADE);
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_Computador_has_Metrica_Metrica1`
+    FOREIGN KEY (`fkMetrica`)
+    REFERENCES `innovaair`.`Metrica` (`idMetrica`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
 
-select dataHora, percentualUso from MetricaCPU;
-select dataHora, percentualUso from MetricaCPU order by datahora desc limit 1;
-CREATE TABLE IF NOT EXISTS `innovair`.`MetricaCPU` (
-  `idMetricaCPU` INT NOT NULL AUTO_INCREMENT,
-  `dataHora` TIMESTAMP NULL DEFAULT current_timestamp,
-  `percentualUso` DOUBLE NULL,
-  `fkCpu` INT NOT NULL,
-  PRIMARY KEY (`idMetricaCPU`, `fkCpu`),
-  INDEX `fk_MetricaCPU_CPU1_idx` (`fkCpu` ASC) VISIBLE,
-  CONSTRAINT `fk_MetricaCPU_CPU1`
-    FOREIGN KEY (`fkCpu`)
-    REFERENCES `innovair`.`CPU` (`idCpu`)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE);
-    
-CREATE TABLE IF NOT EXISTS `innovair`.`MetricaDisco` (
-  `idMetricaDisco` INT NOT NULL AUTO_INCREMENT,
-  `dataHora` TIMESTAMP NULL DEFAULT current_timestamp,
-  `percentualUso` DOUBLE NULL,
-  `quantidadeLivre` DOUBLE NULL,
-  `quantidadeUsada` DOUBLE NULL,
-  `fkDisco` INT NOT NULL,
-  PRIMARY KEY (`idMetricaDisco`, `fkDisco`),
-  INDEX `fk_MetricaDisco_Disco1_idx` (`fkDisco` ASC) VISIBLE,
-  CONSTRAINT `fk_MetricaDisco_Disco1`
-    FOREIGN KEY (`fkDisco`)
-    REFERENCES `innovair`.`Disco` (`idDisco`)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE);
+CREATE TABLE IF NOT EXISTS `innovaair`.`Registro` (
+  `idRegistro` INT NOT NULL AUTO_INCREMENT,
+  `cpu_percentual` DOUBLE NULL,
+  `ram_disponivel_percentual` DOUBLE NULL,
+  `ram_disponivel_gb` DOUBLE NULL,
+  `disco_uso_percentual` VARCHAR(45) NULL,
+  `disco_disponivel_gb` VARCHAR(45) NULL,
+  `dataHora` DATETIME NULL,
+  PRIMARY KEY (`idRegistro`))
+ENGINE = InnoDB
 
+CREATE TABLE IF NOT EXISTS `innovaair`.`Metrica` (
+  `idMetrica` INT NOT NULL AUTO_INCREMENT,
+  `nomeComponente` VARCHAR(45) NULL,
+  `unidadeMedida` VARCHAR(10) NULL,
+  `nomeMetrica` VARCHAR(45) NULL,
+  PRIMARY KEY (`idMetrica`))
+ENGINE = InnoDB;
 
 INSERT INTO `innovair`.`Cliente` (`razaoSocial`, `CNPJ`, `email`, `telefone`, `resposanvel`)
 VALUES
@@ -161,52 +154,16 @@ VALUES
 ('Aeroporto Santos Dumont', 'Terminal 2', 'Setor B', 2),
 ('Aeroporto de Confins', 'Terminal 1', 'Setor C', 3);
 
-
-
--- Inserindo dados fictícios na tabela MetricaCPU
-INSERT INTO `innovair`.`MetricaCPU` (`percentualUso`, `fkCpu`)
-VALUES
-(45.2, 1),
-(50.8, 1),
-(38.5, 1),
-(60.3, 1),
-(72.1, 1);
-
--- Inserindo dados fictícios na tabela MetricaMemoria
-INSERT INTO `innovair`.`MetricaMemoria` (`percentualUso`, `quantidadeLivre`, `quantidadeUsada`, `fkMemoria`)
-VALUES
-(55.4, 4.5, 5.5, 1),
-(60.1, 3.8, 6.2, 1),
-(47.9, 5.3, 4.7, 1),
-(70.6, 2.9, 7.1, 1),
-(80.2, 2.1, 7.9, 1);
-
--- Inserindo dados fictícios na tabela MetricaDisco
-INSERT INTO `innovair`.`MetricaDisco` (`percentualUso`, `quantidadeLivre`, `quantidadeUsada`, `fkDisco`)
-VALUES
-(40.2, 100.5, 67.8, 1),
-(55.8, 80.3, 90.1, 1),
-(72.6, 60.0, 120.4, 1),
-(81.3, 45.2, 135.6, 1),
-(92.7, 25.6, 154.3, 1);
-
-
--- Inserindo CPU para o Computador 1
-INSERT INTO `innovair`.`CPU` (`modelo`, `frequencia`, `cores`, `fkComputador`)
-VALUES ('Intel Core i7', 3.6, 8, 1);
-
--- Inserindo Memória para o Computador 1
-INSERT INTO `innovair`.`Memoria` (`tamanho`, `fkComputador`)
-VALUES (16, 1);
-
--- Inserindo Disco para o Computador 1
-INSERT INTO `innovair`.`Disco` (`tipo`, `capacidade`, `montagem`, `sistemaArquivos`, `fkComputador`)
-VALUES ('SSD', 512, '/dev/sda1', 'NTFS', 1);
+desc registro;
 
 SELECT dataHora , percentualUso FROM MetricaMemoria;
 SELECT dataHora, quantidadeLivre , quantidadeUsada FROM MetricaMemoria;
 
-SELECT dataHora , percentualUso  FROM MetricaCPU;
+select * from registro;
+SELECT * from metricaporcomputador;
+select * from metrica;
+
+delete from metricaporcomputador where fkComputador = 1 and fkMetrica = 1;
 
 
 SELECT dataHora, percentualUso FROM MetricaDisco;

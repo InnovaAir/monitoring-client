@@ -1,10 +1,12 @@
+from datetime import datetime
+
 import mysql.connector
 from mysql.connector import Error
 import psutil
 import time
 
 def verificaPossuiMetricas(idComputador):
-    consulta = "SELECT * from MetricaPorComputador where fkComputador = %d" % idComputador
+    consulta = "SELECT * from Regra where fkComputador = %d" % idComputador
     cursor.execute(consulta)
     print("Executando a consulta: %s" % consulta)
 
@@ -14,31 +16,52 @@ def verificaPossuiMetricas(idComputador):
     if len(myresult) > 0:
         # Se as métricas forem encontradas, serão exibidas
         metricas = myresult[0][0]
-        print(f"Métricas encontradas para essa máquina %s: {metricas}\n")
+        print(f"Métricas encontradas para a máquina de ID {idComputador}: {metricas}\n")
         return True
     else:
         print(f"Métricas não encontrada para essa máquina!\n")
         return False
 
-def cadastrarMetricas(idComputador):
+def exibirTodasMetricas():
     consulta = "SELECT * from Metrica"
     cursor.execute(consulta)
     myresult = cursor.fetchall()
     # Percorrendo o vetor de métricas
     for metrica in myresult:
         print("""
-        ID da métrica: %d
-        Componente da métrica: %s
-        Unidade de medida da métrica: %s
-        Nome da métrica: %s
-        """ % (metrica[0], metrica[1], metrica[2], metrica[3]))
+           ID da métrica: %d
+           Componente da métrica: %s
+           Unidade de medida da métrica: %s
+           Nome da métrica: %s
+           """ % (metrica[0], metrica[1], metrica[2], metrica[3]))
+    return myresult
+
+
+def exibirMetricas(idComputador):
+    consulta = "SELECT idMetrica, nomeComponente, unidadeMedida, nomeMetrica from Regra JOIN Metrica ON Metrica.idMetrica = MetricaPorComputador.fkMetrica WHERE fkComputador = %s" % idComputador
+    cursor.execute(consulta)
+    myresult = cursor.fetchall()
+    # Percorrendo o vetor de métricas
+    print("Métricas do computador de ID: %d" % idComputador)
+    for metrica in myresult:
+        print("""
+               ID da métrica: %d
+               Componente da métrica: %s
+               Unidade de medida da métrica: %s
+               Nome da métrica: %s
+               """ % (metrica[0], metrica[1], metrica[2], metrica[3]))
+    return myresult
+
+def cadastrarMetricas(idComputador):
+
 
     while (True):
         opcao = int(input("""
         Cadastro de métricas - Digite uma opção
         1. Seguir modelo padrão de métricas
         2. Escolher métricas específicas
-        3. Sair
+        3. Ver métricas cadastradas
+        4. Sair
         """))
 
         match (opcao):
@@ -50,6 +73,8 @@ def cadastrarMetricas(idComputador):
                 # Solicitar métricas específicas
                 print("Métricas específicas...")
             case 3:
+                exibirMetricas(idComputador)
+            case 4:
                 break
             case _:
                 print("Número inválido, tente novamente.")
@@ -79,61 +104,101 @@ def resgatarIdComputador(codigoMaquina):
     return None
 
 def capturarDados(idComputador):
-    # Capturando ID das cpus e memorias associados
-    consulta_ids = """
-        SELECT 
-            CPU.idCpu, 
-            Memoria.idMemoria
-        FROM 
-            Computador
-        LEFT JOIN 
-            CPU ON Computador.idComputador = CPU.fkComputador
-        LEFT JOIN 
-            Memoria ON Computador.idComputador = Memoria.fkComputador
-        WHERE 
-            Computador.idComputador = %s;
-        """
+    todas_metricas = exibirTodasMetricas()
+    metricas_da_maquina = exibirMetricas(idComputador)
 
-    # Executa a consulta para obter os IDs da CPU e da Memória
-    cursor.execute(consulta_ids, (idComputador,))
-    resultado_ids = cursor.fetchone()
+    metricasDaMaquinaNome = [metrica[3] for metrica in metricas_da_maquina]
 
-    id_cpu = None
-    id_memoria = None
+    print("Métricas da máquina:", metricas_da_maquina)
+    print("Todas as métricas:", todas_metricas)
 
-    if resultado_ids:
-        id_cpu, id_memoria = resultado_ids
-        print(f"ID da CPU associada: {id_cpu}")
-        print(f"ID da Memória associada: {id_memoria}")
-        while True:
+    for metrica in todas_metricas:
+        if metrica[3] in metricasDaMaquinaNome:
+            print(f"Devemos registrar {metrica[3]}")
+        else:
+            print(f"Não devemos registrar {metrica[3]}")
 
-            #CPU info
-            cpuPercent = psutil.cpu_percent()
-            #Memoria info
-            memVirtualPerc = psutil.virtual_memory().percent
-            memVirtualFree = psutil.virtual_memory().free / (1024**3)
-            memVirtualUsed = psutil.virtual_memory().used / (1024**3)
+    registrar_percentual_cpu = False
+    registrar_percentual_memoria = False
+    registrar_percentual_disco = False
+    registrar_gb_memoria = False
+    registrar_gb_disco = False
+
+    for metrica in todas_metricas:
+        if metrica[3] == "Percentual de uso da CPU" and metrica[3] in metricasDaMaquinaNome:
+           registrar_percentual_cpu = True
+        elif metrica[3] == "Percentual de uso da RAM" and metrica[3] in metricasDaMaquinaNome:
+         registrar_percentual_memoria = True
+        elif metrica[3] == "Percentual de uso do disco" and metrica[3] in metricasDaMaquinaNome:
+           registrar_percentual_disco = True
+        elif metrica[3] == "GB usados da RAM" and metrica[3] in metricasDaMaquinaNome:
+           registrar_gb_memoria = True
+        elif metrica[3] == "GB usados no disco" and metrica[3] in metricasDaMaquinaNome:
+         registrar_gb_disco = True
+
+    #Montando consulta
+    percentual_cpu = None
+    percentual_disco = None
+    percentual_memoria = None
+    gb_disco = None
+    gb_ram = None
+
+    if registrar_percentual_cpu:
+        percentual_cpu = psutil.cpu_percent()
+
+    if registrar_percentual_memoria:
+        percentual_memoria = psutil.virtual_memory().percent
+
+    if registrar_gb_memoria:
+        gb_ram = psutil.virtual_memory().total / 1024 ** 3
+
+    if registrar_percentual_disco or registrar_gb_disco:
+        partitions = psutil.disk_partitions(all=False)
+
+        largest_disk = None
+        max_size = 0
+
+        for partition in partitions:
+            try:
+                usage = psutil.disk_usage(partition.mountpoint)
+                if usage.total > max_size:
+                    max_size = usage.total
+                    largest_disk = partition.mountpoint
+            except PermissionError:
+                continue
+
+        if largest_disk:
+            montagem = largest_disk
+
+            if registrar_percentual_disco:
+                percentual_disco = psutil.disk_usage(montagem).percent
+
+            if registrar_gb_disco:
+                gb_disco = psutil.disk_usage(montagem).total / 1024 ** 3
+        print(percentual_cpu, percentual_disco, percentual_memoria, gb_disco, gb_ram)
+
+        # fazendo a consulta
+        query = """
+           INSERT INTO Registro
+           (cpu_percentual, ram_disponivel_percentual, ram_disponivel_gb, disco_uso_percentual, disco_disponivel_gb, dataHora)
+           VALUES (%s, %s, %s, %s, %s, %s)
+           """
+        valores = (
+            percentual_cpu,
+            percentual_memoria if percentual_memoria is not None else None,
+            gb_ram if gb_ram is not None else None,
+            percentual_disco if percentual_disco is not None else None,
+            gb_disco if gb_disco is not None else None,
+            datetime.now()
+        )
+        cursor.execute(query, valores)
+
+        mydb.commit()
+
+        print("Registro inserido com sucesso!")
 
 
 
-            print("-------------------------------------------------------------")
-            print(f"Porcentagem de memória vitual: {memVirtualPerc}%")
-            print(f"GB's de memória livre: {memVirtualFree}GB")
-            print(f"GB's de memória em uso: {memVirtualUsed}GB1"
-                  f"")
-            print(f"Porcentagem de cpu sendo usada: {cpuPercent}%")
-            print("-------------------------------------------------------------")
-
-            # Preparando consultas
-            consulta_cpu = "INSERT INTO metricaCPU (percentualUso, fkCpu) VALUES (%.2f, %d)" % (cpuPercent, id_cpu)
-            consulta_memoria = "INSERT INTO metricaMemoria (percentualUso, quantidadeLivre, quantidadeUsada, fkMemoria) VALUES (%.2f, %.2f, %.2f, %d)" % (memVirtualPerc, memVirtualFree, memVirtualUsed, id_memoria)
-            print("Executando consulta: %s\nExecutando consulta: %s" % (consulta_cpu, consulta_memoria))
-
-            cursor.execute(consulta_cpu)
-            mydb.commit()
-            cursor.execute(consulta_memoria)
-            mydb.commit()
-            time.sleep(3)
 
 def exibirDadosComputacionais():
     print("Buscando dados computacionais...")
@@ -259,7 +324,9 @@ def home():
                     if (cadastrada):
                         id_computador = resgatarIdComputador(codigoMaquina)
                         if (verificaPossuiMetricas(id_computador)):
-                            capturarDados(id_computador)
+                            while (True):
+                                capturarDados(id_computador)
+                                time.sleep(5)
                         else:
                             cadastrarMetricas(id_computador)
 
