@@ -160,7 +160,7 @@ def cadastrarMetricas(idComputador):
       # print("Atualmente você não possui nenhuma métrica cadastrada, selecione qual métrica deseja capturar para essa máquina")
 
 def resgatarIdComputador(codigoMaquina):
-    consulta = "SELECT idComputador FROM computador WHERE codigoMaquina = '%s'" % codigoMaquina
+    consulta = "SELECT idComputador FROM Computador WHERE codigoMaquina = '%s'" % codigoMaquina
     cursor.execute(consulta)
     print("Executando a consulta: %s" % consulta)
 
@@ -370,7 +370,7 @@ def cadastrarMaquina():
     cadastrarDiscos(id_computador_cadastrado)
 
 def verificarMaquinaCadastrada(codigoMaquina):
-    consulta = "SELECT * FROM computador WHERE codigoMaquina = '%s'" % codigoMaquina
+    consulta = "SELECT * FROM Computador WHERE codigoMaquina = '%s'" % codigoMaquina
     cursor.execute(consulta)
     print("Executando a consulta: %s" % consulta)
     myresult = cursor.fetchall()
