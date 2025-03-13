@@ -6,7 +6,7 @@ import psutil
 import time
 
 def verificaPossuiMetricas(idComputador):
-    consulta = "SELECT * from Regra where fkComputador = %d" % idComputador
+    consulta = "SELECT * from Threshold where fkComputador = %d" % idComputador
     cursor.execute(consulta)
     print("Executando a consulta: %s" % consulta)
 
@@ -36,9 +36,44 @@ def exibirTodasMetricas():
            """ % (metrica[0], metrica[1], metrica[2], metrica[3]))
     return myresult
 
+def cadastrarMetricaEspecifica(idComputador, idMetrica):
+    consulta = "INSERT INTO Threshold (fkComputador, fkMetrica, minimo, maximo) VALUES (%d, %d, 50.0, 70.0)" % (idComputador, idMetrica)
+    try:
+        print("Executando consulta SQL: %s" % consulta)
+        cursor.execute(consulta)
+        mydb.commit()  
+        print("Métrica cadastrada com sucesso!")
+    except mysql.connector.Error as err:
+                    if err.errno == 1062:
+                        print("Métrica já cadastrada.")
+                    elif err.errno == 1452:
+                        print("Métrica nao existe, verifiue as métricas cadastradas.")
+                    else:
+                        print(f"Erro ao executar o INSERT: {err}")   
+
+def deletarMetricaEspecifica(idMetrica, idComputador):
+    consulta_delete = "DELETE FROM Threshold WHERE fkComputador = %d AND fkMetrica = %d" % (idComputador, idMetrica)
+    
+    try:
+        print("Executando consulta SQL: %s" % consulta_delete)
+        cursor.execute(consulta_delete)
+        mydb.commit()  
+    
+        if cursor.rowcount > 0:
+            print("Métrica deletada com sucesso!")
+        else:
+            print("Nenhuma métrica encontrada para os parâmetros fornecidos.")
+    
+    except mysql.connector.Error as err:
+        if err.errno == 1452:
+            print("Erro de chave estrangeira: Não é possível deletar a métrica devido a dependências.")
+        else:
+            print(f"Erro ao executar o DELETE: {err}")
+
+    
 
 def exibirMetricas(idComputador):
-    consulta = "SELECT idMetrica, nomeComponente, unidadeMedida, nomeMetrica from Regra JOIN Metrica ON Metrica.idMetrica = MetricaPorComputador.fkMetrica WHERE fkComputador = %s" % idComputador
+    consulta = "SELECT idMetrica, nomeComponente, unidadeMedida, nomeMetrica from Threshold JOIN Metrica ON Metrica.idMetrica = Threshold.fkMetrica WHERE fkComputador = %s" % idComputador
     cursor.execute(consulta)
     myresult = cursor.fetchall()
     # Percorrendo o vetor de métricas
@@ -53,28 +88,67 @@ def exibirMetricas(idComputador):
     return myresult
 
 def cadastrarMetricas(idComputador):
-
-
     while (True):
         opcao = int(input("""
         Cadastro de métricas - Digite uma opção
         1. Seguir modelo padrão de métricas
-        2. Escolher métricas específicas
+        2. Associar métrica específica
         3. Ver métricas cadastradas
-        4. Sair
+        4. Ver todas métricas disponíveis
+        5. Dessassociar métrica
+        6. Sair
         """))
 
         match (opcao):
             case 1:
                 # Cadastrar métricas padrão
                 print("Cadastrando métricas padrões...")
+
+                consulta1 = "INSERT INTO Threshold (fkComputador, fkMetrica, minimo, maximo) VALUES (%d, 1, 50.0, 70.0)" % (idComputador)
+                consulta2 = "INSERT INTO Threshold (fkComputador, fkMetrica, minimo, maximo) VALUES (%d, 2, 50.0, 70.0)" % (idComputador)
+                consulta3 = "INSERT INTO Threshold (fkComputador, fkMetrica, minimo, maximo) VALUES (%d, 3, 50.0, 70.0)" % (idComputador)
+
+                try:
+                    print("Executando consulta SQL 1: %s" % consulta1)
+                    cursor.execute(consulta1)
+                    mydb.commit()  
+                except mysql.connector.Error as err:
+                    if err.errno == 1062:
+                        print("Métrica já cadastrada.")
+                    else:
+                        print(f"Erro ao executar o INSERT 1: {err}")
+
+                try:
+                    print("Executando consulta SQL 2: %s" % consulta2)
+                    cursor.execute(consulta2)
+                    mydb.commit()  
+                except mysql.connector.Error as err:
+                    if err.errno == 1062:
+                       print("Métrica já cadastrada.")
+                    else:
+                        print(f"Erro ao executar o INSERT 2: {err}")
+
+                try:
+                    print("Executando consulta SQL 3: %s" % consulta3)
+                    cursor.execute(consulta3)
+                    mydb.commit() 
+                except mysql.connector.Error as err:
+                    if err.errno == 1062:
+                       print("Métrica já cadastrada.")
+                    else:
+                        print(f"Erro ao executar o INSERT 3: {err}")
                 break
             case 2:
-                # Solicitar métricas específicas
-                print("Métricas específicas...")
+                idMetrica = int(input("Digite o ID da métrica a ser cadastrada: "))
+                cadastrarMetricaEspecifica(idComputador, idMetrica)
             case 3:
                 exibirMetricas(idComputador)
             case 4:
+                exibirTodasMetricas()
+            case 5:
+                idMetrica = int(input("Digite o ID da métrica a ser excluída: "))
+                deletarMetricaEspecifica(idComputador, idMetrica)
+            case 6: 
                 break
             case _:
                 print("Número inválido, tente novamente.")
@@ -197,9 +271,6 @@ def capturarDados(idComputador):
 
         print("Registro inserido com sucesso!")
 
-
-
-
 def exibirDadosComputacionais():
     print("Buscando dados computacionais...")
     numero_cpus_logicas = psutil.cpu_count(True)
@@ -315,7 +386,7 @@ def home():
         saiu = False
         while (saiu == False):
             opcao = int(input(
-                "\nBem vindo ao client InnovaAir, digite uma opção para prosseguir: \n1. Iniciar captura de dados computacionais.\n2. Verificar informações do computador\n3. Sair\n"))
+                "\nBem vindo ao client InnovaAir, digite uma opção para prosseguir: \n1. Iniciar captura de dados computacionais.\n2. Verificar informações do computador\n3. Ver e editar métricas.\n4. Sair\n"))
             match (opcao):
                 case 1:
                     print("Verificando se a máquina já está cadastrada no banco de dados...")
@@ -324,9 +395,10 @@ def home():
                     if (cadastrada):
                         id_computador = resgatarIdComputador(codigoMaquina)
                         if (verificaPossuiMetricas(id_computador)):
+                            segundos_persistencia = int(input("Digite o tempo de persistência da captura de dados (em segundos): "))
                             while (True):
                                 capturarDados(id_computador)
-                                time.sleep(5)
+                                time.sleep(segundos_persistencia)
                         else:
                             cadastrarMetricas(id_computador)
 
@@ -336,11 +408,17 @@ def home():
                 case 2:
                     exibirDadosComputacionais()
                 case 3:
+                    print("Verificando se a máquina já está cadastrada no banco de dados...")
+                    codigoMaquina = input("Digite o código da sua máquina: ")
+                    cadastrada = verificarMaquinaCadastrada(codigoMaquina)
+                    if (cadastrada):
+                        id_computador = resgatarIdComputador(codigoMaquina)
+                        cadastrarMetricas(id_computador)
+                    
+                case 4:
                     print("\nAté mais :)")
                     saiu = True
                     exit()
-
-
 
 def menuInicial():
     saiu = False
@@ -359,8 +437,8 @@ def menuInicial():
 try:
     mydb = mysql.connector.connect(
         host="localhost",
-        user="pythoncollector",
-        password="pythonklyn123",
+        user="aluno",
+        password="sptech",
         database="innovaair"
     )
     cursor = mydb.cursor()

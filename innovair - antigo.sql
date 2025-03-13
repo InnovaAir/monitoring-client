@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS `innovaair`.`Cliente` (
 CREATE TABLE IF NOT EXISTS `innovaair`.`Computador` (
   `idComputador` INT NOT NULL AUTO_INCREMENT,
   `apelido` VARCHAR(100) NULL,
-  `numeroSeriePlacaMae` VARCHAR(100) NULL,
+  `codigoMaquina` VARCHAR(100) NULL,
   `sistemaOperacional` VARCHAR(100) NULL,
   `hostname` VARCHAR(100) NULL,
   `arquitetura` VARCHAR(100) NULL,
