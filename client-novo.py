@@ -154,8 +154,6 @@ def cadastrarMetricas(idComputador):
                 print("Número inválido, tente novamente.")
 
 
-
-
   # if (verificaPossuiMetricas(idComputador) == False):
       # print("Atualmente você não possui nenhuma métrica cadastrada, selecione qual métrica deseja capturar para essa máquina")
 
@@ -437,8 +435,8 @@ def menuInicial():
 try:
     mydb = mysql.connector.connect(
         host="localhost",
-        user="aluno",
-        password="sptech",
+        user="pythoncollector",
+        password="password123!",
         database="innovaair"
     )
     cursor = mydb.cursor()
