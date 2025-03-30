@@ -9,6 +9,7 @@ mydb = mysql.connector.connect(
   password="muffin123",
   database="TesteProjetoPi"
 )
+
 mycursor = mydb.cursor()
 
 # CREATE TABLE infosComputador (tipoSO varchar(40), cpuPercent float, DiskUsageTotal float, cpuFreq float, cpuCpount int);
@@ -40,6 +41,7 @@ while True:
 
     uptimeSeconds = time.time() - psutil.boot_time()
 
+    # ??? não entendi (Perguntar para o grupo)
     # o time.time() pega o número de segundos que se passaram desde o "start" da época.
     # a época seria 1º de janeiro de 1970, à meia-noite UTC (Coordinated Universal Time). Esse momento é conhecido como Unix Epoch.
     # A escolha do 1º de janeiro de 1970 como a "época" tem a ver com a história do Unix, um sistema operacional criado nos anos 60 e 70. Aqui está um resumo:
@@ -51,7 +53,6 @@ while True:
     uptimeMinutes = int((uptimeSeconds % 3600) / 60)
     uptimeSeconds = int(uptimeSeconds % 60)
 
-
     totalHoras = format(f"{uptimeHours}h {uptimeMinutes}m {uptimeSeconds}s")
     mediaSentf = format(f"{mediaSent:.2f}")
     mediaRecvf = format(f"{mediaRecv:.2f}")
@@ -60,7 +61,6 @@ while True:
     # 1 minuto = 60 segundos
 
     # o if aqui serve para, caso a quantidade de pacotes for 0, a conta não dar erro !! já que divir algo por 0 não da muito certo skjdksjd
-
 
     print("-------------------------------------------------------------")
     print(f"Tamanho médio dos pacotes enviados: {mediaSent:.2f} bytes")
@@ -82,8 +82,9 @@ while True:
     print(mycursor.rowcount, "record inserted.")
 
     time.sleep(1)
+    # Talvez pegar os dados pelo período; manhã, tarde e noite.
+
 # print(redeBytesSent)
 # print(redeBytesRecv)
 # print(redePacksSent)
 # print(redePacksRecv)
-
