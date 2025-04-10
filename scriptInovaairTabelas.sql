@@ -1,126 +1,131 @@
-CREATE DATABASE innovaair;
-USE innovaair;
+#DROP DATABASE innovaair_cliente;
+#DROP DATABASE innovaair_captura;
 
-CREATE TABLE cliente (
-    idCliente INT PRIMARY KEY AUTO_INCREMENT,
-    razaoSocial VARCHAR(100),
-    cnpj CHAR(14),
-    email VARCHAR(255),
-    telefone VARCHAR(15)
+CREATE DATABASE IF NOT EXISTS innovaair_cliente;
+USE innovaair_cliente;
+
+# CRIAÇÃO DAS TABELAS
+CREATE TABLE IF NOT EXISTS cliente (
+  idCliente INT PRIMARY KEY AUTO_INCREMENT,
+  razaoSocial VARCHAR(105) NOT NULL,
+  cnpj CHAR(14) NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  telefone VARCHAR(11) NOT NULL
 );
 
-CREATE TABLE pais (
-    idPais INT PRIMARY KEY AUTO_INCREMENT,
-    nome VARCHAR(45)
+CREATE TABLE IF NOT EXISTS cargo (
+  idCargo INT PRIMARY KEY AUTO_INCREMENT,
+  nome VARCHAR(45) NOT NULL,
+  nivelAcesso INT NOT NULL
 );
 
-CREATE TABLE estado (
-    idEstado INT PRIMARY KEY AUTO_INCREMENT,
-    nome VARCHAR(45),
-    fkPais INT,
-    FOREIGN KEY (fkPais) REFERENCES pais(idPais)
+CREATE TABLE IF NOT EXISTS usuario (
+  idUsuario INT PRIMARY KEY AUTO_INCREMENT,
+  nome VARCHAR(45) NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  senha VARCHAR(30) NOT NULL,
+  fkCliente INT NOT NULL,
+  fkCargo INT NOT NULL,
+  CONSTRAINT fk_usuario_cliente FOREIGN KEY (fkCliente) REFERENCES cliente (idCliente),
+  CONSTRAINT fk_usuario_cargo FOREIGN KEY (fkCargo) REFERENCES cargo(idCargo)
 );
 
-CREATE TABLE cidade (
-    idCidade INT PRIMARY KEY AUTO_INCREMENT,
-    nome VARCHAR(45),
-    fkEstado INT,
-    FOREIGN KEY (fkEstado) REFERENCES estado(idEstado)
+CREATE TABLE IF NOT EXISTS endereco (
+  idEndereco INT PRIMARY KEY AUTO_INCREMENT,
+  cep CHAR(9) NOT NULL,
+  logradouro VARCHAR(100) NOT NULL,
+  numero VARCHAR(45) NOT NULL,
+  complemento VARCHAR(45),
+  bairro VARCHAR(45) NOT NULL,
+  cidade VARCHAR(45) NOT NULL,
+  estado VARCHAR(45) NOT NULL,
+  regiao VARCHAR(10) NOT NULL
 );
 
-CREATE TABLE filial (
-    idFilial INT PRIMARY KEY AUTO_INCREMENT,
-    terminal VARCHAR(30),
-    setor VARCHAR(30),
-    logradouro VARCHAR(100),
-    cep CHAR(9),
-    numero VARCHAR(10),
-    complemento VARCHAR(30),
-    fkCliente INT,
-    fkCidade INT,
-    FOREIGN KEY (fkCliente) REFERENCES cliente(idCliente),
-    FOREIGN KEY (fkCidade) REFERENCES cidade(idCidade)
+CREATE TABLE IF NOT EXISTS filial (
+  idFilial INT PRIMARY KEY AUTO_INCREMENT,
+  terminal VARCHAR(30) NOT NULL,
+  setor VARCHAR(30) NOT NULL,
+  fkCliente INT NOT NULL,
+  fkEndereco INT NOT NULL,
+  CONSTRAINT fk_filial_cliente FOREIGN KEY (fkCliente) REFERENCES cliente (idCliente),
+  CONSTRAINT fk_filial_endereco FOREIGN KEY (fkEndereco) REFERENCES endereco (idEndereco)
 );
 
-CREATE TABLE acesso (
-    idAcesso INT PRIMARY KEY AUTO_INCREMENT,
-    acesso INT,
-    nomeCargo VARCHAR(45)
+CREATE DATABASE IF NOT EXISTS innovaair_captura;
+USE innovaair_captura;
+
+CREATE TABLE IF NOT EXISTS maquina (
+  idMaquina INT PRIMARY KEY AUTO_INCREMENT,
+  fkFilial INT NOT NULL, #Fk Não-Relacional // Por ser outro database
+  numeroSerial VARCHAR(45) NOT NULL,
+  enderecoMac VARCHAR(45) NOT NULL,
+  hostname VARCHAR(45) NOT NULL
 );
 
-CREATE TABLE usuario (
-    idUsuario INT PRIMARY KEY AUTO_INCREMENT,
-    nome VARCHAR(45),
-    tipoUsuario TINYINT,
-    email VARCHAR(255),
-    senha VARCHAR(30),
-    fkCliente INT,
-    fkAcesso INT,
-    FOREIGN KEY (fkCliente) REFERENCES cliente(idCliente),
-    FOREIGN KEY (fkAcesso) REFERENCES acesso(idAcesso)
+CREATE TABLE IF NOT EXISTS componente (
+  idComponente INT PRIMARY KEY AUTO_INCREMENT,
+  fkMaquina INT NOT NULL,
+  componente VARCHAR(45) NOT NULL,
+  especificacao VARCHAR(45) NOT NULL,
+  CONSTRAINT fk_componente_maquina FOREIGN KEY (fkMaquina) REFERENCES maquina (idMaquina)
 );
 
-CREATE TABLE maquina (
-    idMaquina INT PRIMARY KEY AUTO_INCREMENT,
-    fkFilial INT,
-    numeroSerial VARCHAR(45),
-    enderecoMac VARCHAR(45),
-    hostname VARCHAR(45),
-    FOREIGN KEY (fkFilial) REFERENCES filial(idFilial)
+CREATE TABLE IF NOT EXISTS metrica (
+  idMetrica INT PRIMARY KEY AUTO_INCREMENT,
+  metrica VARCHAR(45) NOT NULL,
+  limiteMaximo INT,
+  limiteMinimo INT,
+  fkComponente INT NOT NULL,
+  CONSTRAINT fk_metrica_componente FOREIGN KEY (fkComponente) REFERENCES componente (idComponente)
 );
 
-CREATE TABLE componente (
-    idComponente INT PRIMARY KEY AUTO_INCREMENT,
-    fkMaquina INT,
-    componente VARCHAR(45),
-    especificacao VARCHAR(45),
-    FOREIGN KEY (fkMaquina) REFERENCES maquina(idMaquina)
+CREATE TABLE IF NOT EXISTS captura_alerta (
+  idCapturaAlerta INT PRIMARY KEY AUTO_INCREMENT,
+  valorCapturado INT NOT NULL,
+  momento DATETIME NOT NULL,
+  gravidade VARCHAR(20) NOT NULL,
+  fkMetrica INT NOT NULL,
+  CONSTRAINT fk_alerta_metrica FOREIGN KEY (fkMetrica) REFERENCES metrica (idMetrica)
 );
 
-CREATE TABLE metrica (
-    idMetrica INT PRIMARY KEY AUTO_INCREMENT,
-    metrica VARCHAR(45),
-    limiteMaximo INT,
-    limiteMinimo INT,
-    fkComponente INT,
-    FOREIGN KEY (fkComponente) REFERENCES componente(idComponente)
+CREATE TABLE IF NOT EXISTS captura_historico (
+  idCapturaHistorico INT PRIMARY KEY AUTO_INCREMENT,
+  valorCapturado INT NOT NULL,
+  momento DATETIME NOT NULL,
+  fkMetrica INT NOT NULL,
+  CONSTRAINT fk_historico_metrica FOREIGN KEY (fkMetrica) REFERENCES metrica (idMetrica)
 );
 
-CREATE TABLE alerta (
-    idAlerta INT PRIMARY KEY AUTO_INCREMENT,
-    valorCapturado INT,
-    momento DATETIME DEFAULT CURRENT_TIMESTAMP,
-    fkMetrica INT,
-    FOREIGN KEY (fkMetrica) REFERENCES metrica(idMetrica)
-);
+# Trigger para inserir os alertas
+/*
+DELIMITER //
+CREATE TRIGGER after_insert_captura
+AFTER INSERT ON captura_historico
+FOR EACH ROW
+BEGIN
+    DECLARE v_limite_max INT;
+	DECLARE v_limite_min INT;
 
-insert into pais values
-(default, 'Brasil');
-
-insert into estado values
-(default, 'São Paulo', 1);
-
-insert into cidade values
-(default, 'São Paulo', 1);
+    -- Busca o limiteMaximo da métrica correspondente
+    SELECT limiteMaximo, limiteMinimo
+    INTO v_limite_max, v_limite_min
+    FROM metrica
+    WHERE idMetrica = NEW.fkMetrica;
     
-insert into cliente values
-(default, 'LATAM', '02012862000160', 'latam@latam.org', '1234567890');
-    
-insert into filial values
-(default, 'Terminal 1', 'Setor 1', 'Av. Washington Luís', '04626-911', null, null, 1, 1);
-
-insert into acesso values
-(default, 7, 'gerente');
-    
-insert into maquina values
-(default, 1, '20230715-001-123', '00:11:22-33-44-55', 'maquina01');
-    
-insert into componente values
-(default, 1, 'processador', 'ryzen 3'),
-(default, 1, 'ram', 'kingston ddr4'),
-(default, 1, 'ssd', 'sandisk plus');
-    
-insert into metrica values
-(default, 'usoPorcentagem', 90, 25, 1),
-(default, 'usoPorcentagem', 80, 45, 2),
-(default, 'usoPorcentagem', 85, 30, 3);
+    -- Se o valor da nova captura for maior que o limite, cria alerta
+    IF NEW.valorCapturado > v_limite_max THEN
+        INSERT INTO captura_alerta (valorCapturado, momento, fkMetrica, gravidade)
+        VALUES (NEW.valorCapturado, NOW(), NEW.fkMetrica, 'Grave');
+    ELSEIF NEW.valorCapturado >= ((v_limite_min + v_limite_min)/2) and NEW.valorCapturado < v_limite_max THEN
+		INSERT INTO captura_alerta (valorCapturado, momento, fkMetrica, gravidade)
+        VALUES (NEW.valorCapturado, NOW(), NEW.fkMetrica, 'Médio');
+	ELSEIF NEW.valorCapturado < ((v_limite_min + v_limite_min)/2) and NEW.valorCapturado > v_limite_min THEN
+		INSERT INTO captura_alerta (valorCapturado, momento, fkMetrica, gravidade)
+        VALUES (NEW.valorCapturado, NOW(), NEW.fkMetrica, 'Baixo');   
+	ELSE 
+		INSERT INTO captura_alerta (valorCapturado, momento, fkMetrica, gravidade)
+        VALUES (NEW.valorCapturado, NOW(), NEW.fkMetrica, 'Nenhuma');
+    END IF;
+END//
+DELIMITER ;
