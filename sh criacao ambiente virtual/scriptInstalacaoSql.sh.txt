@@ -32,7 +32,7 @@ sudo mysql -e "FLUSH PRIVILEGES;"
 echo "Executando script de tabelas sql para criação de tabelas"
 sudo mysql -u root -p innovair < scriptInovaairTabelas.sql
 
-echo "Executando script de usuários sql para criação de tabelas"
+echo "Executando script de usuários sql para criação de usuarios"
 sudo mysql -u root -p innovair < scriptInovaairUsuarios.sql
 
 echo "Processo concluído com sucesso"
