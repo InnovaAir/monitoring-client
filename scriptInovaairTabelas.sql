@@ -93,6 +93,15 @@ CREATE TABLE IF NOT EXISTS captura_historico (
   CONSTRAINT fk_historico_metrica FOREIGN KEY (fkMetrica) REFERENCES metrica (idMetrica)
 );
 
+INSERT INTO cliente (razaoSocial, cnpj, email, telefone)
+VALUES ('TAM LINHAS AÉREAS S.A. A LATAM', '12345678000188', 'contato@latam.com.br', '1133224455');
+
+INSERT INTO cargo VALUES
+(1, 'Gerente', 7);
+
+INSERT INTO usuario VALUES
+(default, 'Roberto', 'roberto@latam.com', '123456', 1, 1);
+
 # Trigger para inserir os alertas
 /*
 DELIMITER //
