@@ -1,8 +1,7 @@
-#DROP DATABASE innovaair_cliente;
-#DROP DATABASE innovaair_captura;
+# DROP DATABASE innovaair;
 
-CREATE DATABASE IF NOT EXISTS innovaair_cliente;
-USE innovaair_cliente;
+CREATE DATABASE IF NOT EXISTS innovaair;
+USE innovaair;
 
 # CRIAÇÃO DAS TABELAS
 CREATE TABLE IF NOT EXISTS cliente (
@@ -51,9 +50,6 @@ CREATE TABLE IF NOT EXISTS filial (
   CONSTRAINT fk_filial_cliente FOREIGN KEY (fkCliente) REFERENCES cliente (idCliente),
   CONSTRAINT fk_filial_endereco FOREIGN KEY (fkEndereco) REFERENCES endereco (idEndereco)
 );
-
-CREATE DATABASE IF NOT EXISTS innovaair_captura;
-USE innovaair_captura;
 
 CREATE TABLE IF NOT EXISTS maquina (
   idMaquina INT PRIMARY KEY AUTO_INCREMENT,
