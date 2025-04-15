@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS componente (
   idComponente INT PRIMARY KEY AUTO_INCREMENT,
   fkMaquina INT NOT NULL,
   componente VARCHAR(45) NOT NULL,
-  especificacao VARCHAR(45) NOT NULL,
+  especificacao VARCHAR(100) NOT NULL,
   CONSTRAINT fk_componente_maquina FOREIGN KEY (fkMaquina) REFERENCES maquina (idMaquina)
 );
 
@@ -101,6 +101,8 @@ INSERT INTO cargo VALUES
 
 INSERT INTO usuario VALUES
 (default, 'Roberto', 'roberto@latam.com', '123456', 1, 1);
+
+SELECT idMaquina FROM maquina WHERE numeroSerial = 'SerialNumber';
 
 # Trigger para inserir os alertas
 /*

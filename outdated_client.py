@@ -126,7 +126,7 @@ def cadastrarCPU(fkComputador):
     # resgatando o modelo da CPU (atributo brand_raw do objeto de resposta)
     modelo =  cpuinfo.get_cpu_info()['brand_raw']
 
-    consulta = "INSERT INTO componente (componente, especificacao, fkMaquina) VALUES ('%s', %d)" % ('Processador', modelo, fkComputador)
+    consulta = "INSERT INTO componente (componente, especificacao, fkMaquina) VALUES ('%s', '%s', %s)" % ('Processador', modelo, fkComputador)
     print("Executando a consulta SQL: '%s'", consulta)
     cursor.execute(consulta)
     mydb.commit()
@@ -137,7 +137,7 @@ def cadastrarMemoria(fkComputador):
     print("\nCadastrando memória...")
     especificacao = subprocess.check_output('wmic memorychip get Manufacturer', shell=True, text=True)
     especificacao = especificacao.replace("\n","").replace(" ","")[12:]
-    consulta = "INSERT INTO componente (componente, especificacao, fkComputador) VALUES (%s, %d)" % ('RAM', especificacao, fkComputador)
+    consulta = "INSERT INTO componente (componente, especificacao, fkComputador) VALUES ('%s', '%s', %s)" % ('RAM', especificacao, fkComputador)
     print("Executando a consulta SQL: '%s'", consulta)
     cursor.execute(consulta)
     mydb.commit()
@@ -176,7 +176,7 @@ def cadastrarDiscos(fkComputador):
                     # Consulta SQL para inserir as informações no banco de dados
                     consulta = """
                     INSERT INTO componente (componente, especificacao, fkComputador)
-                    VALUES (%s, %s, %d)
+                    VALUES (%s, %s, %s)
                     """
                     parametros = ("Armazenamento", especificacao, fkComputador)
 
@@ -201,7 +201,7 @@ def cadastrarDiscos(fkComputador):
                     # Consulta SQL para inserir as informações no banco de dados
                     consulta = """
                     INSERT INTO componente (componente, especificacao, fkComputador)
-                    VALUES (%s, %s, %d)
+                    VALUES ('%s', '%s', %d)
                     """
                     parametros = ("Armazenamento", especificacao, fkComputador)
 
@@ -252,51 +252,25 @@ def verificarMaquinaCadastrada():
 def capturarDados(idComputador):
     # Capturando ID das cpus e memorias associados
     consulta_ids = """
-        SELECT 
-            CPU.idCpu, 
-            Memoria.idMemoria
-        FROM 
-            Computador
-        LEFT JOIN 
-            CPU ON Computador.idComputador = CPU.fkComputador
-        LEFT JOIN 
-            Memoria ON Computador.idComputador = Memoria.fkComputador
-        WHERE 
-            Computador.idComputador = %s;
+        SELECT idComponente, componente from componente join maquina on idMaquina = fkMaquina where idMaquina = %s
         """
 
     # Executa a consulta para obter os IDs da CPU e da Memória
     cursor.execute(consulta_ids, (idComputador,))
-    resultado_ids = cursor.fetchone()
-
-    id_cpu = None
-    id_memoria = None
+    resultado_ids = cursor.fetchall()
 
     if resultado_ids:
         id_cpu, id_memoria = resultado_ids
         print(f"ID da CPU associada: {id_cpu}")
         print(f"ID da Memória associada: {id_memoria}")
         while True:
-
-            #CPU info
-            cpuPercent = psutil.cpu_percent()
-            #Memoria info
-            memVirtualPerc = psutil.virtual_memory().percent
-            memVirtualFree = psutil.virtual_memory().free / (1024**3)
-            memVirtualUsed = psutil.virtual_memory().used / (1024**3)
-
-
-
+            ramPorcentagemUso = psutil.virtual_memory().percent
             print("-------------------------------------------------------------")
-            print(f"Porcentagem de memória vitual: {memVirtualPerc}%")
-            print(f"GB's de memória livre: {memVirtualFree}GB")
-            print(f"GB's de memória em uso: {memVirtualUsed}GB1"
-                  f"")
-            print(f"Porcentagem de cpu sendo usada: {cpuPercent}%")
+            print(f"Porcentagem de cpu sendo usada: {ramPorcentagemUso}%")
             print("-------------------------------------------------------------")
 
             # Preparando consultas
-            consulta_cpu = "INSERT INTO MetricaCPU (percentualUso, fkCpu) VALUES (%.2f, %d)" % (cpuPercent, id_cpu)
+            consulta_cpu = "INSERT INTO MetrmicaCPU (percentualUso, fkCpu) VALUES (%.2f, %d)" % (cpuPercent, id_cpu)
             consulta_memoria = "INSERT INTO MetricaMemoria (percentualUso, quantidadeLivre, quantidadeUsada, fkMemoria) VALUES (%.2f, %.2f, %.2f, %d)" % (memVirtualPerc, memVirtualFree, memVirtualUsed, id_memoria)
             print("Executando consulta: %s\nExecutando consulta: %s" % (consulta_cpu, consulta_memoria))
 
