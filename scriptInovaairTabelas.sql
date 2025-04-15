@@ -102,7 +102,7 @@ INSERT INTO cargo VALUES
 INSERT INTO usuario VALUES
 (default, 'Roberto', 'roberto@latam.com', '123456', 1, 1);
 
-SELECT idMaquina FROM maquina WHERE numeroSerial = 'SerialNumber';
+SELECT * from componente;
 
 # Trigger para inserir os alertas
 /*

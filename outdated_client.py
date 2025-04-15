@@ -137,7 +137,7 @@ def cadastrarMemoria(fkComputador):
     print("\nCadastrando memória...")
     especificacao = subprocess.check_output('wmic memorychip get Manufacturer', shell=True, text=True)
     especificacao = especificacao.replace("\n","").replace(" ","")[12:]
-    consulta = "INSERT INTO componente (componente, especificacao, fkComputador) VALUES ('%s', '%s', %s)" % ('RAM', especificacao, fkComputador)
+    consulta = "INSERT INTO componente (componente, especificacao, fkMaquina) VALUES ('%s', '%s', %s)" % ('RAM', especificacao, fkComputador)
     print("Executando a consulta SQL: '%s'", consulta)
     cursor.execute(consulta)
     mydb.commit()
@@ -175,7 +175,7 @@ def cadastrarDiscos(fkComputador):
 
                     # Consulta SQL para inserir as informações no banco de dados
                     consulta = """
-                    INSERT INTO componente (componente, especificacao, fkComputador)
+                    INSERT INTO componente (componente, especificacao, fkMaquina)
                     VALUES (%s, %s, %s)
                     """
                     parametros = ("Armazenamento", especificacao, fkComputador)
@@ -194,27 +194,21 @@ def cadastrarDiscos(fkComputador):
     elif system == "Windows":  # Se for Windows (verificando versão)
         try:
             # Agora, coletando os discos no Windows usando psutil
-            discos = psutil.disk_partitions(all=False)
-            for disco in discos:
-                try:
-                    especificacao = subprocess.check_output('wmic diskdrive get Model', shell=True, text=True).split()[1:3]
-                    # Consulta SQL para inserir as informações no banco de dados
-                    consulta = """
-                    INSERT INTO componente (componente, especificacao, fkComputador)
-                    VALUES ('%s', '%s', %d)
-                    """
-                    parametros = ("Armazenamento", especificacao, fkComputador)
-
-                    # Executa a consulta no banco de dados
-                    print(f"Executando a consulta para cadastrar o disco em {montagem}...")
-
-                    cursor.execute(consulta, parametros)
-                    mydb.commit()
-
-                    id_disco_cadastrado = cursor.lastrowid
-                    print(f"Disco de id {id_disco_cadastrado} cadastrado com sucesso!\n")
-                except Exception as e:
-                    print(f"Erro ao cadastrar o disco: {e}")
+            try:
+                especificacao = str(subprocess.check_output('wmic diskdrive get Model', shell=True, text=True).split()[1:3]).replace("[",  "").replace("]", "").replace("'", "").replace(",", "")
+                # Consulta SQL para inserir as informações no banco de dados
+                consulta = """
+                INSERT INTO componente (componente, especificacao, fkMaquina)
+                VALUES (%s, %s, %s)
+                """
+                parametros = ("Armazenamento", especificacao, fkComputador)
+                # Executa a consulta no banco de dados
+                cursor.execute(consulta, parametros)
+                mydb.commit()
+                id_disco_cadastrado = cursor.lastrowid
+                print(f"Disco de id {id_disco_cadastrado} cadastrado com sucesso!\n")
+            except Exception as e:
+                print(f"Erro ao cadastrar o disco: {e}")
         
         except Exception as e:
             print(f"Erro ao obter o número de série da placa-mãe ou ao buscar discos no Windows: {e}")
