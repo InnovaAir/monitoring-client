@@ -327,37 +327,44 @@ SELECT idComponente, componente, metrica, idMetrica from componente join maquina
                 if(consulta[2] == "porcentagemUso"):
                     cpuPorcentagemUso = psutil.cpu_percent(interval=None)
                     insert = "INSERT INTO captura_historico (idCapturaHistorico, valorCapturado, fkMetrica) VALUES (default, %s, %s)" % (cpuPorcentagemUso, consulta[3])
-                if(consulta[2] == "processos"):
+                    cursor.execute(insert)
+                elif(consulta[2] == "processos"):
+                    total = 0
                     for processo in psutil.process_iter(['name']):
-                         insert = "INSERT INTO captura_historico (idCapturaHistorico, valorCapturado, fkMetrica) VALUES (default, %s, %s)" % (processo.info['name'], consulta[3])
-                         cursor.execute(insert)
-                if(consulta[2] == "tempoAtividade"):
+                         total+=1
+                    insert = "INSERT INTO captura_historico (idCapturaHistorico, valorCapturado, fkMetrica) VALUES (default, '%s', %s)" % (total, consulta[3])
+                    cursor.execute(insert)
+                elif(consulta[2] == "tempoAtividade"):
                     boot_time = round(psutil.boot_time())
                     agora = time.time()
                     tempoLigado = int(agora - boot_time)
                     insert = "INSERT INTO captura_historico (idCapturaHistorico, valorCapturado, fkMetrica) VALUES (default, %s, %s)" % (tempoLigado, consulta[3])
-            if(consulta[1] == "RAM"):
+                    cursor.execute(insert)
+            elif(consulta[1] == "RAM"):
                 if(consulta[2] == "porcentagemUso"):
                     ramPorcentagemUso = psutil.virtual_memory().percent
                     insert = "INSERT INTO captura_historico (idCapturaHistorico, valorCapturado, fkMetrica) VALUES (default, %s, %s)" % (ramPorcentagemUso, consulta[3])
-            if(consulta[1] == "Armazenamento"):
+                    cursor.execute(insert)
+            elif(consulta[1] == "Armazenamento"):
                 if(consulta[2] == "porcentagemUso"):
                     discoPorcentagemUso = psutil.disk_usage('C:/').percent
                     insert = "INSERT INTO captura_historico (idCapturaHistorico, valorCapturado, fkMetrica) VALUES (default, %s, %s)" % (discoPorcentagemUso, consulta[3])
-            if(consulta[1] == "Rede"):
+                    cursor.execute(insert)
+            elif(consulta[1] == "Rede"):
                 if(consulta[2] == "velocidadeDownload"):
                     redeDownload1 = psutil.net_io_counters().bytes_sent
                     time.sleep(2)
                     redeDownload2 = psutil.net_io_counters().bytes_sent
                     redeDownload = redeDownload2 - redeDownload1
                     insert = "INSERT INTO captura_historico (idCapturaHistorico, valorCapturado, fkMetrica) VALUES (default, %s, %s)" % (redeDownload, consulta[3])
-                if(consulta[2] == "velocidadeUpload"):
+                    cursor.execute(insert)
+                elif(consulta[2] == "velocidadeUpload"):
                     redeUpload1 = psutil.net_io_counters().bytes_recv
                     time.sleep(2)
                     redeUpload2 = psutil.net_io_counters().bytes_recv
                     redeUpload = redeUpload2 - redeUpload1
                     insert = "INSERT INTO captura_historico (idCapturaHistorico, valorCapturado, fkMetrica) VALUES (default, %s, %s)" % (redeUpload, consulta[3])
-            cursor.execute(insert)
+                    cursor.execute(insert)
             mydb.commit()
         time.sleep(10)
 
