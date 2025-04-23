@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS metrica (
 
 CREATE TABLE IF NOT EXISTS captura_alerta (
   idCapturaAlerta INT PRIMARY KEY AUTO_INCREMENT,
-  valorCapturado FLOAT NOT NULL,
+  valorCapturado VARCHAR(20) NOT NULL,
   momento DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   gravidade VARCHAR(20) NOT NULL,
   fkMetrica INT NOT NULL,
@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS captura_alerta (
 
 CREATE TABLE IF NOT EXISTS captura_historico (
   idCapturaHistorico INT PRIMARY KEY AUTO_INCREMENT,
-  valorCapturado FLOAT NOT NULL,
+  valorCapturado VARCHAR(20) NOT NULL,
   momento DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   fkMetrica INT NOT NULL,
   CONSTRAINT fk_historico_metrica FOREIGN KEY (fkMetrica) REFERENCES metrica (idMetrica)

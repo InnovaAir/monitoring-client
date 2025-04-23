@@ -139,6 +139,10 @@ def cadastrarCPU(fkComputador):
     cursor.execute(consulta)
     consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('frequencia', null, null, %s)" % (id_cpu_cadastrada)
     cursor.execute(consulta)
+    consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('processos', null, null, %s)" % (id_cpu_cadastrada)
+    cursor.execute(consulta)
+    consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('tempoAtividade', null, null, %s)" % (id_cpu_cadastrada)
+    cursor.execute(consulta)
     mydb.commit()
     fkMetrica = cursor._last_insert_id
     frequencia = psutil.cpu_freq().max
@@ -323,6 +327,15 @@ SELECT idComponente, componente, metrica, idMetrica from componente join maquina
                 if(consulta[2] == "porcentagemUso"):
                     cpuPorcentagemUso = psutil.cpu_percent(interval=None)
                     insert = "INSERT INTO captura_historico (idCapturaHistorico, valorCapturado, fkMetrica) VALUES (default, %s, %s)" % (cpuPorcentagemUso, consulta[3])
+                if(consulta[2] == "processos"):
+                    for processo in psutil.process_iter(['name']):
+                         insert = "INSERT INTO captura_historico (idCapturaHistorico, valorCapturado, fkMetrica) VALUES (default, %s, %s)" % (processo.info['name'], consulta[3])
+                         cursor.execute(insert)
+                if(consulta[2] == "tempoAtividade"):
+                    boot_time = round(psutil.boot_time())
+                    agora = time.time()
+                    tempoLigado = int(agora - boot_time)
+                    insert = "INSERT INTO captura_historico (idCapturaHistorico, valorCapturado, fkMetrica) VALUES (default, %s, %s)" % (tempoLigado, consulta[3])
             if(consulta[1] == "RAM"):
                 if(consulta[2] == "porcentagemUso"):
                     ramPorcentagemUso = psutil.virtual_memory().percent

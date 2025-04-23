@@ -1,31 +1,44 @@
 import psutil
 import subprocess
 import time
+import datetime
 
             # Dados relevantes
             # RAM:
             # porcentagemUso
-ramPorcentagemUso = psutil.virtual_memory().percent
-print(ramPorcentagemUso)
-            # total
-ramTotal = psutil.virtual_memory().total
-print(ramTotal)
+# ramPorcentagemUso = psutil.virtual_memory().percent
+# print(ramPorcentagemUso)
+#             # total
+# ramTotal = psutil.virtual_memory().total
+# print(ramTotal)
             # processos
-
+# listaProcessos = []
+for processo in psutil.process_iter([]):
+    print(processo.info['name'])
             # CPU:
-            # porcentagemUso
-cpuPorcentagemUso = psutil.cpu_percent()
-print(cpuPorcentagemUso)
+#             # porcentagemUso
+# cpuPorcentagemUso = psutil.cpu_percent()
+# print(cpuPorcentagemUso)
             # frequencia
-cpuFreq = psutil.cpu_freq().max
-print(cpuFreq)
+            # boottime
+# boot_time = round(psutil.boot_time())
+# print(boot_time)
+# agora = time.time()
+# tempoLigado = int(agora - boot_time)
+# print(tempoLigado)
+# boot_datetime = datetime.datetime.fromtimestamp(boot_time)
+# tempoLigado = datetime.datetime.now() - boot_datetime
+# tempoLigado = str(tempoLigado).split('.')[0]
+# print(tempoLigado)
+# cpuFreq = psutil.cpu_freq().max
+# print(cpuFreq)
             # Disco:
             # porcentagemUso
-discoPorcentagemUso = psutil.disk_usage('C:/').percent
-print(discoPorcentagemUso)
+# discoPorcentagemUso = psutil.disk_usage('C:/').percent
+# print(discoPorcentagemUso)
             # total
-discoTotal = psutil.disk_usage('C:/').total
-print(discoTotal)
+# discoTotal = psutil.disk_usage('C:/').total
+# print(discoTotal)
             # Rede:
             # downloadBytes
 redeDownload1 = psutil.net_io_counters().bytes_sent
@@ -39,13 +52,3 @@ time.sleep(2)
 redeUpload2 = psutil.net_io_counters().bytes_recv
 redeUpload = redeUpload2 - redeUpload1
 print(redeUpload)
-
-especificacao = str(subprocess.check_output('wmic diskdrive get Model', shell=True, text=True).split()[1:3]).replace("[",  "").replace("]", "").replace("'", "").replace(",", "")
-
-print(especificacao)
-
-especificacao = subprocess.check_output('lspci | grep -i ethernet', shell=True, text=True)
-print(especificacao)
-
-
-# wmic nic get Name, Manufacturer, ProductName
