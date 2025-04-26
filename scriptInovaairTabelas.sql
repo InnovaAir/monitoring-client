@@ -99,20 +99,36 @@ CREATE TABLE IF NOT EXISTS captura_historico (
   CONSTRAINT fk_historico_metrica FOREIGN KEY (fkMetrica) REFERENCES metrica (idMetrica)
 );
 
-INSERT INTO cliente (razaoSocial, cnpj, email, telefone)
-VALUES ('TAM LINHAS AÉREAS S.A. A LATAM', '12345678000188', 'contato@latam.com.br', '1133224455');
-
-INSERT INTO endereco VALUES
-(default, '04626-911', 'Av. Washington Luís', 'S/N',  'Aeroporto de Congonhas', 'Campo Belo', 'São Paulo', 'SP', 'Sudeste');
-
-INSERT INTO filial VALUES
-(default, "1", "1", 1, 1);
+INSERT INTO cliente (razaoSocial, cnpj, email, telefone) VALUES
+('InnovaAir', '12345678000188', 'inovaair@technology.com', '1133224455'),
+('TAM LINHAS AÉREAS S.A. A LATAM', '12345678000188', 'contato@latam.com.br', '1133224455');
 
 INSERT INTO cargo VALUES
-(1, 'Gerente', 7);
+(1, 'Administrador', 7),
+(2, 'Gerente', 6),
+(3, 'Analista', 5),
+(4, 'Tecnico', 4);
 
 INSERT INTO usuario VALUES
-(default, 'Roberto', 'roberto@latam.com', '123456', 1, 1);
+(default, 'InnovaAir', 'inovaair@technology.com', 'Admin123@', 1, 1),
+(default, 'Roberto', 'roberto@latam.com', 'Senha123@', 2, 2),
+(default, 'Estela', 'estela@latam.com', 'Senha123@', 2, 3),
+(default, 'Kátia', 'katia@latam.com', 'Senha123@', 2, 4);
+
+INSERT INTO endereco (cep, logradouro, numero, complemento, bairro, cidade, estado, regiao) VALUES
+('09560-850', 'Rod. Hélio Smidt', '1', 'Terminal 1', 'Cumbica', 'Guarulhos', 'SP', 'Sudeste'),  -- Aeroporto de GRU
+('21041-253', 'Av. Vinte de Janeiro', 's/n', 'Terminal Principal', 'Galeão', 'Rio de Janeiro', 'RJ', 'Sudeste'),  -- Galeão
+('31742-010', 'Av. Carlos Drummond', '5.600', 'Terminal 2', 'Confins', 'Belo Horizonte', 'MG', 'Sudeste'),  -- Confins
+('81530-900', 'Av. Rocha Pombo', 's/n', 'Terminal de Passageiros', 'Água Verde', 'Curitiba', 'PR', 'Sul'),  -- Afonso Pena
+('91010-971', 'Av. Severo Dulius', '9000', 'Terminal 1', 'São João', 'Porto Alegre', 'RS', 'Sul'); -- Salgado Filho
+
+INSERT INTO filial (terminal, setor, fkCliente, fkEndereco) VALUES
+('Terminal 3 - GRU', 'Embarque Internacional', 1, 1),  -- GRU
+('Terminal 1 - Galeão', 'Carga Aérea', 2, 2),  -- Galeão
+('Terminal de Confins', 'Administrativo', 3, 3),  -- Confins
+('Terminal Principal - Afonso Pena', 'Segurança', 4, 4),  -- Curitiba
+('Terminal 1 - Salgado Filho', 'Operações', 5, 5);  -- Porto Alegre
+
 
 SELECT * from maquina;
 SELECT * from componente;
