@@ -125,9 +125,9 @@ INSERT INTO endereco (cep, logradouro, numero, complemento, bairro, cidade, esta
 INSERT INTO filial (terminal, setor, fkCliente, fkEndereco) VALUES
 ('Terminal 3 - GRU', 'Embarque Internacional', 1, 1),  -- GRU
 ('Terminal 1 - Galeão', 'Carga Aérea', 2, 2),  -- Galeão
-('Terminal de Confins', 'Administrativo', 3, 3),  -- Confins
-('Terminal Principal - Afonso Pena', 'Segurança', 4, 4),  -- Curitiba
-('Terminal 1 - Salgado Filho', 'Operações', 5, 5);  -- Porto Alegre
+('Terminal de Confins', 'Administrativo', 2, 3),  -- Confins
+('Terminal Principal - Afonso Pena', 'Segurança', 2, 4),  -- Curitiba
+('Terminal 1 - Salgado Filho', 'Operações', 2, 5);  -- Porto Alegre
 
 
 SELECT * from maquina;
