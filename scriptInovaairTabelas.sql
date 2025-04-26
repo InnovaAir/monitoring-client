@@ -138,14 +138,21 @@ desc captura_historico;
 select * from captura_historico;
 SELECT razaoSocial, idFilial, idMaquina, componente, especificacao, metrica, valorCapturado, momento from maquina join componente on idMaquina = fkMaquina join metrica on idComponente = fkComponente join captura_historico on idMetrica = fkMetrica join filial on idFilial = fkFilial join cliente on idCliente = fkCliente;
 # Trigger para inserir os alertas
-/*
+
+
+
+
+
+
+
+
 DELIMITER //
 CREATE TRIGGER after_insert_captura
 AFTER INSERT ON captura_historico
 FOR EACH ROW
 BEGIN
     DECLARE v_limite_max INT;
-	DECLARE v_limite_min INT;
+    DECLARE v_limite_min INT;
 
     -- Busca o limiteMaximo da métrica correspondente
     SELECT limiteMaximo, limiteMinimo
@@ -156,11 +163,11 @@ BEGIN
     -- Se o valor da nova captura for maior que o limite, cria alerta
     IF NEW.valorCapturado > v_limite_max THEN
         INSERT INTO captura_alerta (valorCapturado, momento, fkMetrica, gravidade)
-        VALUES (NEW.valorCapturado, NOW(), NEW.fkMetrica, 'Grave');
-    ELSEIF NEW.valorCapturado >= ((v_limite_min + v_limite_min)/2) and NEW.valorCapturado < v_limite_max THEN
+        VALUES (NEW.valorCapturado, NOW(), NEW.fkMetrica, 'Crítico');
+    ELSEIF NEW.valorCapturado >= ((v_limite_min + v_limite_max)/2) and NEW.valorCapturado < v_limite_max THEN
 		INSERT INTO captura_alerta (valorCapturado, momento, fkMetrica, gravidade)
-        VALUES (NEW.valorCapturado, NOW(), NEW.fkMetrica, 'Médio');
-	ELSEIF NEW.valorCapturado < ((v_limite_min + v_limite_min)/2) and NEW.valorCapturado > v_limite_min THEN
+        VALUES (NEW.valorCapturado, NOW(), NEW.fkMetrica, 'Alto');
+    ELSEIF NEW.valorCapturado < ((v_limite_min + v_limite_min)/2) and NEW.valorCapturado > v_limite_min THEN
 		INSERT INTO captura_alerta (valorCapturado, momento, fkMetrica, gravidade)
         VALUES (NEW.valorCapturado, NOW(), NEW.fkMetrica, 'Baixo');   
 	ELSE 
@@ -168,4 +175,4 @@ BEGIN
         VALUES (NEW.valorCapturado, NOW(), NEW.fkMetrica, 'Nenhuma');
     END IF;
 END//
-DELIMITER ;
+DELIMITER;
