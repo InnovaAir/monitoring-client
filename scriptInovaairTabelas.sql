@@ -47,12 +47,12 @@ CREATE TABLE IF NOT EXISTS filial (
   setor VARCHAR(30) NOT NULL,
   fkCliente INT NOT NULL,
   fkEndereco INT NOT NULL,
-  CONSTRAINT fk_filial_cliente FOREIGN KEY (fkCliente) REFERENCES cliente (idCliente),
+  CONSTRAINT fk_filial_cliente FOREIGN KEY (fkCliente) REFERENCES cliente(idCliente),
   CONSTRAINT fk_filial_endereco FOREIGN KEY (fkEndereco) REFERENCES endereco (idEndereco)
 );
 
 CREATE TABLE IF NOT EXISTS usuarioFilial(
-	fkUsuario INT NOT NULL,
+    fkUsuario INT NOT NULL,
     fkFilial INT NOT NULL,
     primary key (fkUsuario, fkFilial)
 );
@@ -62,7 +62,8 @@ CREATE TABLE IF NOT EXISTS maquina (
   fkFilial INT NOT NULL, #Fk Não-Relacional // Por ser outro database
   numeroSerial VARCHAR(45) NOT NULL,
   enderecoMac VARCHAR(45) NOT NULL,
-  hostname VARCHAR(45) NOT NULL
+  hostname VARCHAR(45) NOT NULL,
+  CONSTRAINT filialMaquina FOREIGN KEY (fkFilial) REFERENCES filial(idFilial)
 );
 
 CREATE TABLE IF NOT EXISTS componente (
@@ -115,6 +116,11 @@ INSERT INTO usuario VALUES
 (default, 'Estela', 'estela@latam.com', 'Senha123@', 2, 3),
 (default, 'Kátia', 'katia@latam.com', 'Senha123@', 2, 4);
 
+INSERT INTO usuarioFilial VALUES
+(2, 1),
+(3, 1),
+(4, 1);
+
 INSERT INTO endereco (cep, logradouro, numero, complemento, bairro, cidade, estado, regiao) VALUES
 ('09560-850', 'Rod. Hélio Smidt', '1', 'Terminal 1', 'Cumbica', 'Guarulhos', 'SP', 'Sudeste'),  -- Aeroporto de GRU
 ('21041-253', 'Av. Vinte de Janeiro', 's/n', 'Terminal Principal', 'Galeão', 'Rio de Janeiro', 'RJ', 'Sudeste'),  -- Galeão
@@ -128,7 +134,6 @@ INSERT INTO filial (terminal, setor, fkCliente, fkEndereco) VALUES
 ('de Confins', 'Administrativo', 2, 3),  -- Confins
 ('Principal - Afonso Pena', 'Segurança', 2, 4),  -- Curitiba
 ('Salgado Filho', 'Operações', 2, 5);  -- Porto Alegre
-
 
 SELECT * from maquina;
 SELECT * from componente;
