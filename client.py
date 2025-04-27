@@ -10,22 +10,21 @@ def menuInicial():
     while (saiu == False):
         opcao = int(
             input("Bem vindo ao client InnovaAir, digite uma opção para prosseguir:\n1. Rodar sistema\n2. Sair\n"))
-        home()
-        # match (opcao):
-        #     case 1:
-        #         home()
-        #         email = input("\nInforme seu e-mail:\n")
-        #         senha = input("Informe sua senha:\n")
-        #         if (login(email, senha)):
-        #             home()
-        #             saiu = True
-        #         else:
-        #             print("Login ou senha inválidos, tente novamente!")
-        #             return
-        #     case 2:
-        #         print("Até mais :)")
-        #         saiu = True
-        #         exit()
+        match (opcao):
+            case 1:
+                home()
+                email = input("\nInforme seu e-mail:\n")
+                senha = input("Informe sua senha:\n")
+                if (login(email, senha)):
+                    home()
+                    saiu = True
+                else:
+                    print("Login ou senha inválidos, tente novamente!")
+                    return
+            case 2:
+                print("Até mais :)")
+                saiu = True
+                exit()
 
 def login(email, senha):
     consulta = """
@@ -108,20 +107,19 @@ def home():
     while (saiu == False):
         opcao = int(input(
             "\nBem vindo ao client InnovaAir, digite uma opção para prosseguir: \n1. Iniciar captura de dados computacionais.\n2. Verificar informações do Computador\n3. Sair\n"))
-        verificarMaquinaCadastrada()
-        # match (opcao):
-        #     case 1:
-        #         print("Verificando se a máquina já está cadastrada no banco de dados...")
-        #         cadastrada = verificarMaquinaCadastrada()
-        #         if (cadastrada):
-        #             id_Computador = resgatarIdComputador()
-        #             capturarDados(id_Computador)
-        #     case 2:
-        #         exibirDadosComputacionais()
-        #     case 3:
-        #         print("\nAté mais :)")
-        #         saiu = True
-        #         exit()
+        match (opcao):
+            case 1:
+                print("Verificando se a máquina já está cadastrada no banco de dados...")
+                cadastrada = verificarMaquinaCadastrada()
+                if (cadastrada):
+                    id_Computador = resgatarIdComputador()
+                    capturarDados(id_Computador)
+            case 2:
+                exibirDadosComputacionais()
+            case 3:
+                print("\nAté mais :)")
+                saiu = True
+                exit()
 
 def cadastrarCPU(fkComputador):
     print("\nCadastrando CPU...")
