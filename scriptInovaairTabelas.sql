@@ -180,4 +180,13 @@ BEGIN
         VALUES (NEW.valorCapturado, NOW(), NEW.fkMetrica, 'Nenhuma');
     END IF;
 END//
-DELIMITER;
+# DELIMITER;
+
+SELECT valorCapturado, momento, metrica, limiteMaximo, limiteMinimo, componente, especificacao, fkFilial from captura_historico join metrica on fkMetrica = idMetrica join componente on fkComponente = idComponente join maquina on fkMaquina = idMaquina join filial on fkFilial = idFilial;
+       SELECT idUsuario, filial.fkCliente, fkCargo, idFilial FROM usuario
+        JOIN usuarioFilial
+        ON fkUsuario = idUsuario
+        JOIN filial
+        ON fkFilial = idFilial
+        JOIN cliente on idCliente = filial.fkCliente    
+        WHERE usuario.email = '' AND senha = 'Senha123@';
