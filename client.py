@@ -315,19 +315,32 @@ def verificarMaquinaCadastrada():
 def capturarDados(idComputador):
     # Capturando ID das cpus e memorias associados
     consulta_ids = """
-SELECT idComponente, componente, metrica, idMetrica from componente join maquina on idMaquina = fkMaquina join metrica on idComponente = fkComponente where idMaquina = %s
+SELECT idComponente, componente, metrica, idMetrica, limiteMinimo, limiteMaximo from componente join maquina on idMaquina = fkMaquina join metrica on idComponente = fkComponente where idMaquina = %s
         """
     cursor.execute(consulta_ids, (idComputador,))
     resultados = cursor.fetchall()
-
+    dados = [[]]
     # Executa a consulta para obter os IDs da CPU e da Memória
     while True:
         for consulta in resultados:
+            limiteMinimo = int(consulta[4])
+            limiteMedio = int(consulta[4])/int(consulta[5])
+            limiteMaximo = int(consulta[5])
             if(consulta[1] == "Processador"):
                 if(consulta[2] == "porcentagemUso"):
                     cpuPorcentagemUso = psutil.cpu_percent(interval=None)
-                    insert = "INSERT INTO captura_historico (idCapturaHistorico, valorCapturado, fkMetrica) VALUES (default, %s, %s)" % (cpuPorcentagemUso, consulta[3])
-                    cursor.execute(insert)
+                    # ALERTA BAIXO >= que minimo < que medio
+                    # ALERTA ALTO >= que medio < maximo
+                    # ALERTA CRITICO >= maximo
+                    if(cpuPorcentagemUso >= int(consulta[4]) and cpuPorcentagemUso < limiteMedio):
+                        insert = "INSERT INTO captura_alerta (idCapturaHistorico, valorCapturado, fkMetrica, gravidade) VALUES (default, %s, %s, 'baixo')" % (cpuPorcentagemUso, consulta[3])
+                        cursor.execute(insert)
+                    if(cpuPorcentagemUso >= limiteMedio and cpuPorcentagemUso < limiteMaximo):
+                        insert = "INSERT INTO captura_alerta (idCapturaHistorico, valorCapturado, fkMetrica, gravidade) VALUES (default, %s, %s, 'alto')" % (cpuPorcentagemUso, consulta[3])
+                        cursor.execute(insert)
+                    if(cpuPorcentagemUso >= limiteMaximo):
+                        insert = "INSERT INTO captura_alerta (idCapturaHistorico, valorCapturado, fkMetrica, gravidade) VALUES (default, %s, %s, 'critico')" % (cpuPorcentagemUso, consulta[3])
+                        cursor.execute(insert)
                 elif(consulta[2] == "processos"):
                     total = 0
                     for processo in psutil.process_iter(['name']):
