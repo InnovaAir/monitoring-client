@@ -4,6 +4,9 @@ import psutil
 import time
 import subprocess
 import socket, platform, cpuinfo
+from datetime import datetime
+import csv
+import boto3
 
 def menuInicial():
     saiu = False
@@ -146,7 +149,7 @@ def cadastrarCPU(fkComputador):
     mydb.commit()
     fkMetrica = cursor._last_insert_id
     frequencia = psutil.cpu_freq().max
-    consulta = "INSERT INTO captura_historico (valorCapturado, fkMetrica) VALUES (%s, %s)" % (frequencia, fkMetrica)
+    consulta = "INSERT INTO captura_alerta (valorCapturado, fkMetrica) VALUES (%s, %s)" % (frequencia, fkMetrica)
     cursor.execute(consulta)
     mydb.commit()
     print("\nCPU de id %d cadastrado\n" % id_cpu_cadastrada)
@@ -172,9 +175,14 @@ def cadastrarMemoria(fkComputador):
     limiteMax = input("Insira o limite máximo para a captura de dados da porcentagem de uso dessa RAM: ")
     consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('porcentagemUso', %s, %s, %s)" % (limiteMin, limiteMax, id_memoria_cadastrada)
     cursor.execute(consulta)
+    consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('processos', null, null, %s)" % (id_memoria_cadastrada)
+    cursor.execute(consulta)
     consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('total', null, null, %s)" % (id_memoria_cadastrada)
     cursor.execute(consulta)
-    consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('processos', null, null, %s)" % (id_memoria_cadastrada)
+    mydb.commit()
+    total = psutil.virtual_memory().total
+    fkMetrica = cursor._last_insert_id
+    consulta = "INSERT INTO captura_alerta (valorCapturado, fkMetrica) VALUES (%s, %s)" % (total, fkMetrica)
     cursor.execute(consulta)
     mydb.commit()
     print("memória de id %d cadastrado\n" % id_memoria_cadastrada)
@@ -250,7 +258,7 @@ def cadastrarDiscos(fkComputador):
                 mydb.commit()
                 fkMetrica = cursor._last_insert_id
                 valorCaptura = psutil.disk_usage('C:/').total
-                consulta = "INSERT INTO captura_historico (valorCapturado, fkMetrica) VALUES (%s, %s)" % (valorCaptura, fkMetrica)
+                consulta = "INSERT INTO captura_alerta (valorCapturado, fkMetrica) VALUES (%s, %s)" % (valorCaptura, fkMetrica)
                 cursor.execute(consulta)
                 mydb.commit()
                 print(f"Disco de id {id_disco_cadastrado} cadastrado com sucesso!\n")
@@ -272,9 +280,13 @@ def cadastrarRede(fkComputador):
     cursor.execute(consulta)
     mydb.commit()
     redeCadastrado = cursor._last_insert_id
-    consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('velocidadeDownload', null, null, %s)" % (redeCadastrado)
+    limiteMin = input("Insira o limite mínimo para a captura de dados da velocidade de download desse chip de rede: ")
+    limiteMax = input("Insira o limite máximo para a captura de dados da velocidade de download desse chip de rede: ")
+    consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('velocidadeDownload', %s, %s, %s)" % (limiteMin, limiteMax, redeCadastrado)
     cursor.execute(consulta)
-    consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('velocidadeUpload', null, null, %s)" % (redeCadastrado)
+    limiteMin = input("Insira o limite mínimo para a captura de dados da velocidade de download desse chip de rede: ")
+    limiteMax = input("Insira o limite máximo para a captura de dados da velocidade de download desse chip de rede: ")
+    consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('velocidadeUpload', %s, %s, %s)" % (limiteMin, limiteMax, redeCadastrado)
     cursor.execute(consulta)
     mydb.commit()
     print(f"Chip de rede de id {redeCadastrado} cadastrado com sucesso!\n")
@@ -315,71 +327,134 @@ def verificarMaquinaCadastrada():
 def capturarDados(idComputador):
     # Capturando ID das cpus e memorias associados
     consulta_ids = """
-SELECT idComponente, componente, metrica, idMetrica, limiteMinimo, limiteMaximo from componente join maquina on idMaquina = fkMaquina join metrica on idComponente = fkComponente where idMaquina = %s
+SELECT idComponente, componente, metrica, idMetrica, case when limiteMinimo is null then 2147000000 else limiteMinimo end as limiteMinimo, case when limiteMaximo is null then 2147000000 else limiteMaximo end as limiteMaximo, terminal, setor, idMaquina, especificacao from componente join maquina on idMaquina = fkMaquina join metrica on idComponente = fkComponente join filial on idFilial = fkFilial where idMaquina = %s;
         """
     cursor.execute(consulta_ids, (idComputador,))
     resultados = cursor.fetchall()
-    dados = [[]]
+    dados = [['terminal', 'setor', 'idMaquina', 'componente', 'especificacao', 'metrica', 'valorCapturado', 'momento']]
     # Executa a consulta para obter os IDs da CPU e da Memória
+    minuto = 0
     while True:
         for consulta in resultados:
             limiteMinimo = int(consulta[4])
-            limiteMedio = int(consulta[4])/int(consulta[5])
             limiteMaximo = int(consulta[5])
+            limiteMedio = (limiteMaximo+limiteMinimo)/2
             if(consulta[1] == "Processador"):
                 if(consulta[2] == "porcentagemUso"):
                     cpuPorcentagemUso = psutil.cpu_percent(interval=None)
-                    # ALERTA BAIXO >= que minimo < que medio
-                    # ALERTA ALTO >= que medio < maximo
-                    # ALERTA CRITICO >= maximo
-                    if(cpuPorcentagemUso >= int(consulta[4]) and cpuPorcentagemUso < limiteMedio):
-                        insert = "INSERT INTO captura_alerta (idCapturaHistorico, valorCapturado, fkMetrica, gravidade) VALUES (default, %s, %s, 'baixo')" % (cpuPorcentagemUso, consulta[3])
+                    if(cpuPorcentagemUso >= limiteMinimo and cpuPorcentagemUso < limiteMedio):
+                        insert = "INSERT INTO captura_alerta (idCapturaAlerta, valorCapturado, fkMetrica, gravidade) VALUES (default, %s, %s, 'baixo')" % (cpuPorcentagemUso, consulta[3])
                         cursor.execute(insert)
                     if(cpuPorcentagemUso >= limiteMedio and cpuPorcentagemUso < limiteMaximo):
-                        insert = "INSERT INTO captura_alerta (idCapturaHistorico, valorCapturado, fkMetrica, gravidade) VALUES (default, %s, %s, 'alto')" % (cpuPorcentagemUso, consulta[3])
+                        insert = "INSERT INTO captura_alerta (idCapturaAlerta, valorCapturado, fkMetrica, gravidade) VALUES (default, %s, %s, 'alto')" % (cpuPorcentagemUso, consulta[3])
                         cursor.execute(insert)
                     if(cpuPorcentagemUso >= limiteMaximo):
-                        insert = "INSERT INTO captura_alerta (idCapturaHistorico, valorCapturado, fkMetrica, gravidade) VALUES (default, %s, %s, 'critico')" % (cpuPorcentagemUso, consulta[3])
+                        insert = "INSERT INTO captura_alerta (idCapturaAlerta, valorCapturado, fkMetrica, gravidade) VALUES (default, %s, %s, 'critico')" % (cpuPorcentagemUso, consulta[3])
                         cursor.execute(insert)
+                    agora = datetime.now()
+                    agora = agora.strftime("%Y/%m/%d %H:%M:%S")
+                    dado = [consulta[6], consulta[7], consulta[8], consulta[1], consulta[9], consulta[2], cpuPorcentagemUso, agora]
+                    dados.append(dado)
                 elif(consulta[2] == "processos"):
                     total = 0
                     for processo in psutil.process_iter(['name']):
                          total+=1
-                    insert = "INSERT INTO captura_historico (idCapturaHistorico, valorCapturado, fkMetrica) VALUES (default, '%s', %s)" % (total, consulta[3])
-                    cursor.execute(insert)
+                    agora = datetime.now()
+                    agora = agora.strftime("%Y/%m/%d %H:%M:%S")
+                    dado = [consulta[6], consulta[7], consulta[8], consulta[1], consulta[9], consulta[2], total, agora]
+                    dados.append(dado)
                 elif(consulta[2] == "tempoAtividade"):
                     boot_time = round(psutil.boot_time())
                     agora = time.time()
                     tempoLigado = int(agora - boot_time)
-                    insert = "INSERT INTO captura_historico (idCapturaHistorico, valorCapturado, fkMetrica) VALUES (default, %s, %s)" % (tempoLigado, consulta[3])
-                    cursor.execute(insert)
+                    agora = datetime.now()
+                    agora = agora.strftime("%Y/%m/%d %H:%M:%S")
+                    dado = [consulta[6], consulta[7], consulta[8], consulta[1], consulta[9], consulta[2], tempoLigado, agora]
+                    dados.append(dado)
             elif(consulta[1] == "RAM"):
                 if(consulta[2] == "porcentagemUso"):
                     ramPorcentagemUso = psutil.virtual_memory().percent
-                    insert = "INSERT INTO captura_historico (idCapturaHistorico, valorCapturado, fkMetrica) VALUES (default, %s, %s)" % (ramPorcentagemUso, consulta[3])
-                    cursor.execute(insert)
+                    if(ramPorcentagemUso >= limiteMinimo and ramPorcentagemUso < limiteMedio):
+                        insert = "INSERT INTO captura_alerta (idCapturaAlerta, valorCapturado, fkMetrica, gravidade) VALUES (default, %s, %s, 'baixo')" % (ramPorcentagemUso, consulta[3])
+                        cursor.execute(insert)
+                    if(ramPorcentagemUso >= limiteMedio and ramPorcentagemUso < limiteMaximo):
+                        insert = "INSERT INTO captura_alerta (idCapturaAlerta, valorCapturado, fkMetrica, gravidade) VALUES (default, %s, %s, 'alto')" % (ramPorcentagemUso, consulta[3])
+                        cursor.execute(insert)
+                    if(ramPorcentagemUso >= limiteMaximo):
+                        insert = "INSERT INTO captura_alerta (idCapturaAlerta, valorCapturado, fkMetrica, gravidade) VALUES (default, %s, %s, 'critico')" % (ramPorcentagemUso, consulta[3])
+                        cursor.execute(insert)
+                    agora = datetime.now()
+                    agora = agora.strftime("%Y/%m/%d %H:%M:%S")
+                    dado = [consulta[6], consulta[7], consulta[8], consulta[1], consulta[9], consulta[2], ramPorcentagemUso, agora]
+                    dados.append(dado)
             elif(consulta[1] == "Armazenamento"):
                 if(consulta[2] == "porcentagemUso"):
-                    discoPorcentagemUso = psutil.disk_usage('C:/').percent
-                    insert = "INSERT INTO captura_historico (idCapturaHistorico, valorCapturado, fkMetrica) VALUES (default, %s, %s)" % (discoPorcentagemUso, consulta[3])
-                    cursor.execute(insert)
+                    isLinux = psutil.LINUX
+                    if isLinux:
+                        discoPorcentagemUso = psutil.disk_usage('/').percent
+                    else:
+                        discoPorcentagemUso = psutil.disk_usage('C:/').percent
+                    if(discoPorcentagemUso >= limiteMinimo and discoPorcentagemUso < limiteMedio):
+                        insert = "INSERT INTO captura_alerta (idCapturaAlerta, valorCapturado, fkMetrica, gravidade) VALUES (default, %s, %s, 'baixo')" % (discoPorcentagemUso, consulta[3])
+                        cursor.execute(insert)
+                    if(discoPorcentagemUso >= limiteMedio and discoPorcentagemUso < limiteMaximo):
+                        insert = "INSERT INTO captura_alerta (idCapturaAlerta, valorCapturado, fkMetrica, gravidade) VALUES (default, %s, %s, 'alto')" % (discoPorcentagemUso, consulta[3])
+                        cursor.execute(insert)
+                    if(discoPorcentagemUso >= limiteMaximo):
+                        insert = "INSERT INTO captura_alerta (idCapturaAlerta, valorCapturado, fkMetrica, gravidade) VALUES (default, %s, %s, 'critico')" % (discoPorcentagemUso, consulta[3])
+                        cursor.execute(insert)
+                    agora = datetime.now()
+                    agora = agora.strftime("%Y/%m/%d %H:%M:%S")
+                    dado = [consulta[6], consulta[7], consulta[8], consulta[1], consulta[9], consulta[2], discoPorcentagemUso, agora]
+                    dados.append(dado)
             elif(consulta[1] == "Rede"):
                 if(consulta[2] == "velocidadeDownload"):
                     redeDownload1 = psutil.net_io_counters().bytes_sent
                     time.sleep(2)
                     redeDownload2 = psutil.net_io_counters().bytes_sent
                     redeDownload = redeDownload2 - redeDownload1
-                    insert = "INSERT INTO captura_historico (idCapturaHistorico, valorCapturado, fkMetrica) VALUES (default, %s, %s)" % (redeDownload, consulta[3])
-                    cursor.execute(insert)
+                    if(redeDownload >= limiteMinimo and redeDownload < limiteMedio):
+                        insert = "INSERT INTO captura_alerta (idCapturaAlerta, valorCapturado, fkMetrica, gravidade) VALUES (default, %s, %s, 'baixo')" % (redeDownload, consulta[3])
+                        cursor.execute(insert)
+                    if(redeDownload >= limiteMedio and redeDownload < limiteMaximo):
+                        insert = "INSERT INTO captura_alerta (idCapturaAlerta, valorCapturado, fkMetrica, gravidade) VALUES (default, %s, %s, 'alto')" % (redeDownload, consulta[3])
+                        cursor.execute(insert)
+                    if(redeDownload >= limiteMaximo):
+                        insert = "INSERT INTO captura_alerta (idCapturaAlerta, valorCapturado, fkMetrica, gravidade) VALUES (default, %s, %s, 'critico')" % (redeDownload, consulta[3])
+                        cursor.execute(insert)
+                    agora = datetime.now()
+                    agora = agora.strftime("%Y/%m/%d %H:%M:%S")
+                    dado = [consulta[6], consulta[7], consulta[8], consulta[1], consulta[9], consulta[2], redeDownload, agora]
+                    dados.append(dado)
                 elif(consulta[2] == "velocidadeUpload"):
                     redeUpload1 = psutil.net_io_counters().bytes_recv
                     time.sleep(2)
                     redeUpload2 = psutil.net_io_counters().bytes_recv
                     redeUpload = redeUpload2 - redeUpload1
-                    insert = "INSERT INTO captura_historico (idCapturaHistorico, valorCapturado, fkMetrica) VALUES (default, %s, %s)" % (redeUpload, consulta[3])
-                    cursor.execute(insert)
+                    if(redeUpload >= limiteMinimo and redeUpload < limiteMedio):
+                        insert = "INSERT INTO captura_alerta (idCapturaAlerta, valorCapturado, fkMetrica, gravidade) VALUES (default, %s, %s, 'baixo')" % (redeUpload, consulta[3])
+                        cursor.execute(insert)
+                    if(redeUpload >= limiteMedio and redeUpload < limiteMaximo):
+                        insert = "INSERT INTO captura_alerta (idCapturaAlerta, valorCapturado, fkMetrica, gravidade) VALUES (default, %s, %s, 'alto')" % (redeUpload, consulta[3])
+                        cursor.execute(insert)
+                    if(redeUpload >= limiteMaximo):
+                        insert = "INSERT INTO captura_alerta (idCapturaAlerta, valorCapturado, fkMetrica, gravidade) VALUES (default, %s, %s, 'critico')" % (redeUpload, consulta[3])
+                        cursor.execute(insert)
+                    agora = datetime.now()
+                    agora = agora.strftime("%Y/%m/%d %H:%M:%S")
+                    dado = [consulta[6], consulta[7], consulta[8], consulta[1], consulta[9], consulta[2], redeUpload, agora]
+                    dados.append(dado)
+                    minuto+=1
+                    if(minuto == 60):
+                        minuto = 1
+                        agora = datetime.now()
+                        agora = agora.strftime("%Y%m%d%H%M%S")
+                        filename = 'data' + str(agora) + str(idComputador) + '.csv'
+                        with open(filename, 'w', newline='') as csvfile:
+                            csvwriter = csv.writer(csvfile)
+                            csvwriter.writerows(dados)
             mydb.commit()
-        time.sleep(10)
+        time.sleep(60)
 
 
 

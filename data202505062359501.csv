@@ -1,0 +1,71 @@
+terminal,setor,idMaquina,componente,especificacao,metrica,valorCapturado,momento
+GRU,Embarque Internacional,1,Processador,AMD Ryzen 3 PRO 3200GE w/ Radeon Vega Graphics,porcentagemUso,22.3,2025/05/06 23:58:24
+GRU,Embarque Internacional,1,Processador,AMD Ryzen 3 PRO 3200GE w/ Radeon Vega Graphics,processos,233,2025/05/06 23:58:24
+GRU,Embarque Internacional,1,Processador,AMD Ryzen 3 PRO 3200GE w/ Radeon Vega Graphics,tempoAtividade,661713,2025/05/06 23:58:24
+GRU,Embarque Internacional,1,RAM,KingstonKingston,porcentagemUso,86.2,2025/05/06 23:58:24
+GRU,Embarque Internacional,1,Armazenamento,KINGSTON SA400S37240G,porcentagemUso,99.9,2025/05/06 23:58:24
+GRU,Embarque Internacional,1,Rede,MicrosoftKernelDebugNetworkAdapter,velocidadeDownload,298,2025/05/06 23:58:27
+GRU,Embarque Internacional,1,Rede,MicrosoftKernelDebugNetworkAdapter,velocidadeUpload,1284,2025/05/06 23:58:29
+GRU,Embarque Internacional,1,Processador,AMD Ryzen 3 PRO 3200GE w/ Radeon Vega Graphics,porcentagemUso,14.9,2025/05/06 23:58:34
+GRU,Embarque Internacional,1,Processador,AMD Ryzen 3 PRO 3200GE w/ Radeon Vega Graphics,processos,233,2025/05/06 23:58:34
+GRU,Embarque Internacional,1,Processador,AMD Ryzen 3 PRO 3200GE w/ Radeon Vega Graphics,tempoAtividade,661723,2025/05/06 23:58:34
+GRU,Embarque Internacional,1,RAM,KingstonKingston,porcentagemUso,86.6,2025/05/06 23:58:34
+GRU,Embarque Internacional,1,Armazenamento,KINGSTON SA400S37240G,porcentagemUso,99.9,2025/05/06 23:58:34
+GRU,Embarque Internacional,1,Rede,MicrosoftKernelDebugNetworkAdapter,velocidadeDownload,332,2025/05/06 23:58:36
+GRU,Embarque Internacional,1,Rede,MicrosoftKernelDebugNetworkAdapter,velocidadeUpload,646,2025/05/06 23:58:38
+GRU,Embarque Internacional,1,Processador,AMD Ryzen 3 PRO 3200GE w/ Radeon Vega Graphics,porcentagemUso,16.9,2025/05/06 23:58:43
+GRU,Embarque Internacional,1,Processador,AMD Ryzen 3 PRO 3200GE w/ Radeon Vega Graphics,processos,236,2025/05/06 23:58:43
+GRU,Embarque Internacional,1,Processador,AMD Ryzen 3 PRO 3200GE w/ Radeon Vega Graphics,tempoAtividade,661732,2025/05/06 23:58:43
+GRU,Embarque Internacional,1,RAM,KingstonKingston,porcentagemUso,86.6,2025/05/06 23:58:43
+GRU,Embarque Internacional,1,Armazenamento,KINGSTON SA400S37240G,porcentagemUso,99.9,2025/05/06 23:58:43
+GRU,Embarque Internacional,1,Rede,MicrosoftKernelDebugNetworkAdapter,velocidadeDownload,1433,2025/05/06 23:58:45
+GRU,Embarque Internacional,1,Rede,MicrosoftKernelDebugNetworkAdapter,velocidadeUpload,936,2025/05/06 23:58:47
+GRU,Embarque Internacional,1,Processador,AMD Ryzen 3 PRO 3200GE w/ Radeon Vega Graphics,porcentagemUso,13.0,2025/05/06 23:58:52
+GRU,Embarque Internacional,1,Processador,AMD Ryzen 3 PRO 3200GE w/ Radeon Vega Graphics,processos,235,2025/05/06 23:58:52
+GRU,Embarque Internacional,1,Processador,AMD Ryzen 3 PRO 3200GE w/ Radeon Vega Graphics,tempoAtividade,661741,2025/05/06 23:58:52
+GRU,Embarque Internacional,1,RAM,KingstonKingston,porcentagemUso,87.2,2025/05/06 23:58:52
+GRU,Embarque Internacional,1,Armazenamento,KINGSTON SA400S37240G,porcentagemUso,99.9,2025/05/06 23:58:52
+GRU,Embarque Internacional,1,Rede,MicrosoftKernelDebugNetworkAdapter,velocidadeDownload,138,2025/05/06 23:58:54
+GRU,Embarque Internacional,1,Rede,MicrosoftKernelDebugNetworkAdapter,velocidadeUpload,226,2025/05/06 23:58:56
+GRU,Embarque Internacional,1,Processador,AMD Ryzen 3 PRO 3200GE w/ Radeon Vega Graphics,porcentagemUso,12.2,2025/05/06 23:59:01
+GRU,Embarque Internacional,1,Processador,AMD Ryzen 3 PRO 3200GE w/ Radeon Vega Graphics,processos,235,2025/05/06 23:59:01
+GRU,Embarque Internacional,1,Processador,AMD Ryzen 3 PRO 3200GE w/ Radeon Vega Graphics,tempoAtividade,661750,2025/05/06 23:59:01
+GRU,Embarque Internacional,1,RAM,KingstonKingston,porcentagemUso,86.8,2025/05/06 23:59:01
+GRU,Embarque Internacional,1,Armazenamento,KINGSTON SA400S37240G,porcentagemUso,99.9,2025/05/06 23:59:01
+GRU,Embarque Internacional,1,Rede,MicrosoftKernelDebugNetworkAdapter,velocidadeDownload,7158,2025/05/06 23:59:03
+GRU,Embarque Internacional,1,Rede,MicrosoftKernelDebugNetworkAdapter,velocidadeUpload,1232,2025/05/06 23:59:05
+GRU,Embarque Internacional,1,Processador,AMD Ryzen 3 PRO 3200GE w/ Radeon Vega Graphics,porcentagemUso,14.4,2025/05/06 23:59:10
+GRU,Embarque Internacional,1,Processador,AMD Ryzen 3 PRO 3200GE w/ Radeon Vega Graphics,processos,236,2025/05/06 23:59:10
+GRU,Embarque Internacional,1,Processador,AMD Ryzen 3 PRO 3200GE w/ Radeon Vega Graphics,tempoAtividade,661759,2025/05/06 23:59:10
+GRU,Embarque Internacional,1,RAM,KingstonKingston,porcentagemUso,86.8,2025/05/06 23:59:10
+GRU,Embarque Internacional,1,Armazenamento,KINGSTON SA400S37240G,porcentagemUso,99.9,2025/05/06 23:59:10
+GRU,Embarque Internacional,1,Rede,MicrosoftKernelDebugNetworkAdapter,velocidadeDownload,4579,2025/05/06 23:59:12
+GRU,Embarque Internacional,1,Rede,MicrosoftKernelDebugNetworkAdapter,velocidadeUpload,136900,2025/05/06 23:59:14
+GRU,Embarque Internacional,1,Processador,AMD Ryzen 3 PRO 3200GE w/ Radeon Vega Graphics,porcentagemUso,37.8,2025/05/06 23:59:19
+GRU,Embarque Internacional,1,Processador,AMD Ryzen 3 PRO 3200GE w/ Radeon Vega Graphics,processos,236,2025/05/06 23:59:19
+GRU,Embarque Internacional,1,Processador,AMD Ryzen 3 PRO 3200GE w/ Radeon Vega Graphics,tempoAtividade,661768,2025/05/06 23:59:19
+GRU,Embarque Internacional,1,RAM,KingstonKingston,porcentagemUso,89.0,2025/05/06 23:59:19
+GRU,Embarque Internacional,1,Armazenamento,KINGSTON SA400S37240G,porcentagemUso,99.9,2025/05/06 23:59:19
+GRU,Embarque Internacional,1,Rede,MicrosoftKernelDebugNetworkAdapter,velocidadeDownload,55994,2025/05/06 23:59:21
+GRU,Embarque Internacional,1,Rede,MicrosoftKernelDebugNetworkAdapter,velocidadeUpload,5047882,2025/05/06 23:59:23
+GRU,Embarque Internacional,1,Processador,AMD Ryzen 3 PRO 3200GE w/ Radeon Vega Graphics,porcentagemUso,21.7,2025/05/06 23:59:28
+GRU,Embarque Internacional,1,Processador,AMD Ryzen 3 PRO 3200GE w/ Radeon Vega Graphics,processos,236,2025/05/06 23:59:28
+GRU,Embarque Internacional,1,Processador,AMD Ryzen 3 PRO 3200GE w/ Radeon Vega Graphics,tempoAtividade,661777,2025/05/06 23:59:28
+GRU,Embarque Internacional,1,RAM,KingstonKingston,porcentagemUso,89.0,2025/05/06 23:59:28
+GRU,Embarque Internacional,1,Armazenamento,KINGSTON SA400S37240G,porcentagemUso,99.9,2025/05/06 23:59:28
+GRU,Embarque Internacional,1,Rede,MicrosoftKernelDebugNetworkAdapter,velocidadeDownload,66150,2025/05/06 23:59:30
+GRU,Embarque Internacional,1,Rede,MicrosoftKernelDebugNetworkAdapter,velocidadeUpload,718802,2025/05/06 23:59:32
+GRU,Embarque Internacional,1,Processador,AMD Ryzen 3 PRO 3200GE w/ Radeon Vega Graphics,porcentagemUso,17.5,2025/05/06 23:59:37
+GRU,Embarque Internacional,1,Processador,AMD Ryzen 3 PRO 3200GE w/ Radeon Vega Graphics,processos,235,2025/05/06 23:59:37
+GRU,Embarque Internacional,1,Processador,AMD Ryzen 3 PRO 3200GE w/ Radeon Vega Graphics,tempoAtividade,661786,2025/05/06 23:59:37
+GRU,Embarque Internacional,1,RAM,KingstonKingston,porcentagemUso,88.3,2025/05/06 23:59:37
+GRU,Embarque Internacional,1,Armazenamento,KINGSTON SA400S37240G,porcentagemUso,99.9,2025/05/06 23:59:37
+GRU,Embarque Internacional,1,Rede,MicrosoftKernelDebugNetworkAdapter,velocidadeDownload,385,2025/05/06 23:59:39
+GRU,Embarque Internacional,1,Rede,MicrosoftKernelDebugNetworkAdapter,velocidadeUpload,496,2025/05/06 23:59:41
+GRU,Embarque Internacional,1,Processador,AMD Ryzen 3 PRO 3200GE w/ Radeon Vega Graphics,porcentagemUso,12.7,2025/05/06 23:59:46
+GRU,Embarque Internacional,1,Processador,AMD Ryzen 3 PRO 3200GE w/ Radeon Vega Graphics,processos,235,2025/05/06 23:59:46
+GRU,Embarque Internacional,1,Processador,AMD Ryzen 3 PRO 3200GE w/ Radeon Vega Graphics,tempoAtividade,661795,2025/05/06 23:59:46
+GRU,Embarque Internacional,1,RAM,KingstonKingston,porcentagemUso,88.5,2025/05/06 23:59:46
+GRU,Embarque Internacional,1,Armazenamento,KINGSTON SA400S37240G,porcentagemUso,99.9,2025/05/06 23:59:46
+GRU,Embarque Internacional,1,Rede,MicrosoftKernelDebugNetworkAdapter,velocidadeDownload,404,2025/05/06 23:59:48
+GRU,Embarque Internacional,1,Rede,MicrosoftKernelDebugNetworkAdapter,velocidadeUpload,755,2025/05/06 23:59:50

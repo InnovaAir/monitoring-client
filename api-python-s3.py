@@ -22,7 +22,7 @@ valores = [list(valor) for valor in valores]
 print(valores)
     
 data = [
-    ['razaoSocial', 'idFilial', 'idMaquina', 'componente', 'especificacao', 'metrica', 'valorCapturado', 'momento'],
+    ['terminal', 'setor', 'idMaquina', 'componente', 'especificacao', 'metrica', 'valorCapturado', 'momento'],
 ]
 data.extend(valores)
     
