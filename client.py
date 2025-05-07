@@ -445,7 +445,7 @@ SELECT idComponente, componente, metrica, idMetrica, case when limiteMinimo is n
                     dado = [consulta[6], consulta[7], consulta[8], consulta[1], consulta[9], consulta[2], redeUpload, agora]
                     dados.append(dado)
                     minuto+=1
-                    if(minuto == 60):
+                    if(minuto == 10):
                         minuto = 1
                         agora = datetime.now()
                         agora = agora.strftime("%Y%m%d%H%M%S")
@@ -453,8 +453,17 @@ SELECT idComponente, componente, metrica, idMetrica, case when limiteMinimo is n
                         with open(filename, 'w', newline='') as csvfile:
                             csvwriter = csv.writer(csvfile)
                             csvwriter.writerows(dados)
+                        s3 = boto3.client(
+                           's3',
+                           aws_access_key_id='aws_access_key_id',
+                           aws_secret_access_key='aws_secret_access_key',
+                           region_name='region_name',
+                           aws_session_token='aws_session_token'
+                        )                       
+                        filenameDestino = "trusted" + filename
+                        s3.upload_file(filename, 'lucasrawteste', filenameDestino)
             mydb.commit()
-        time.sleep(60)
+        time.sleep(5)
 
 
 
