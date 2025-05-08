@@ -460,8 +460,7 @@ SELECT idComponente, componente, metrica, idMetrica, case when limiteMinimo is n
                            region_name='region_name',
                            aws_session_token='aws_session_token'
                         )                       
-                        filenameDestino = "trusted" + filename
-                        s3.upload_file(filename, 'lucasrawteste', filenameDestino)
+                        s3.upload_file(filename, 'lucasrawteste', filename)
             mydb.commit()
         time.sleep(5)
 
