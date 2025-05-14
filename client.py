@@ -271,10 +271,11 @@ def cadastrarDiscos(fkComputador):
 def cadastrarRede(fkComputador):
     system = platform.system()
     if system == "Windows":
-        especificacao = subprocess.check_output('wmic nic get Name', shell=True, text=True)
-        especificacao = especificacao.replace(" ","").split("\n")[2]
+        especificacao = subprocess.check_output('wmic nic get Manufacturer, Name, Description', shell=True, text=True)
+        especificacao = especificacao.replace("  ", " ").strip().split("\n")[1].split("  ")[-1].strip()
     elif system == "Linux":
         especificacao = subprocess.check_output('lspci | grep -i ethernet', shell=True, text=True)
+        especificacao = especificacao.split("Ethernet controller:")[-1].strip()
     consulta = "INSERT INTO componente (componente, especificacao, fkMaquina) VALUES ('%s', '%s', %s)" % ('Rede', especificacao, fkComputador)
     print("Executando a consulta SQL: '%s'", consulta)
     cursor.execute(consulta)
