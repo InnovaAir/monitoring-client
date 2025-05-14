@@ -163,7 +163,7 @@ def cadastrarMemoria(fkComputador):
         especificacao = especificacao.replace("\n","").replace(" ","")[12:]
     elif system == "Linux":
         especificacao = subprocess.check_output('sudo dmidecode --type memory | grep -i Manufacturer', shell=True, text=True)
-        especificacao = especificacao.replace("\n","").replace(" ","").replace("Manufacturer:", "")[12:]
+        especificacao = especificacao.replace("\n","").replace(" ","").replace("Manufacturer:", "")[10:]
     consulta = "INSERT INTO componente (componente, especificacao, fkMaquina) VALUES ('%s', '%s', %s)" % ('RAM', especificacao, fkComputador)
     print("Executando a consulta SQL: '%s'", consulta)
     cursor.execute(consulta)
