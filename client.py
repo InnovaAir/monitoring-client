@@ -446,7 +446,7 @@ SELECT idComponente, componente, metrica, idMetrica, case when limiteMinimo is n
                     dado = [consulta[6], consulta[7], consulta[8], consulta[1], consulta[9], consulta[2], redeUpload, agora]
                     dados.append(dado)
                     minuto+=1
-                    if(minuto == 10):
+                    if(minuto == 4):
                         minuto = 1
                         agora = datetime.now()
                         agora = agora.strftime("%Y%m%d%H%M%S")
@@ -463,7 +463,7 @@ SELECT idComponente, componente, metrica, idMetrica, case when limiteMinimo is n
                         )                       
                         s3.upload_file(filename, 'lucasrawteste', filename)
             mydb.commit()
-        time.sleep(5)
+        time.sleep(900)
 
 
 
