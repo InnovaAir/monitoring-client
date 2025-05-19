@@ -149,7 +149,7 @@ def cadastrarCPU(fkComputador):
     mydb.commit()
     fkMetrica = cursor._last_insert_id
     frequencia = psutil.cpu_freq().max
-    consulta = "INSERT INTO captura_alerta (valorCapturado, fkMetrica) VALUES (%s, %s)" % (frequencia, fkMetrica)
+    consulta = "INSERT INTO captura_alerta (valorCapturado, fkMetrica, gravidade) VALUES (%s, %s, 'baixo')" % (frequencia, fkMetrica)
     cursor.execute(consulta)
     mydb.commit()
     print("\nCPU de id %d cadastrado\n" % id_cpu_cadastrada)
@@ -182,7 +182,7 @@ def cadastrarMemoria(fkComputador):
     mydb.commit()
     total = psutil.virtual_memory().total
     fkMetrica = cursor._last_insert_id
-    consulta = "INSERT INTO captura_alerta (valorCapturado, fkMetrica) VALUES (%s, %s)" % (total, fkMetrica)
+    consulta = "INSERT INTO captura_alerta (valorCapturado, fkMetrica, gravidade) VALUES (%s, %s, 'baixo')" % (total, fkMetrica)
     cursor.execute(consulta)
     mydb.commit()
     print("memória de id %d cadastrado\n" % id_memoria_cadastrada)
@@ -258,7 +258,7 @@ def cadastrarDiscos(fkComputador):
                 mydb.commit()
                 fkMetrica = cursor._last_insert_id
                 valorCaptura = psutil.disk_usage('C:/').total
-                consulta = "INSERT INTO captura_alerta (valorCapturado, fkMetrica) VALUES (%s, %s)" % (valorCaptura, fkMetrica)
+                consulta = "INSERT INTO captura_alerta (valorCapturado, fkMetrica, gravidade) VALUES (%s, %s, 'baixo')" % (valorCaptura, fkMetrica)
                 cursor.execute(consulta)
                 mydb.commit()
                 print(f"Disco de id {id_disco_cadastrado} cadastrado com sucesso!\n")
@@ -285,8 +285,8 @@ def cadastrarRede(fkComputador):
     limiteMax = input("Insira o limite máximo para a captura de dados da velocidade de download desse chip de rede: ")
     consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('velocidadeDownload', %s, %s, %s)" % (limiteMin, limiteMax, redeCadastrado)
     cursor.execute(consulta)
-    limiteMin = input("Insira o limite mínimo para a captura de dados da velocidade de download desse chip de rede: ")
-    limiteMax = input("Insira o limite máximo para a captura de dados da velocidade de download desse chip de rede: ")
+    limiteMin = input("Insira o limite mínimo para a captura de dados da velocidade de upload desse chip de rede: ")
+    limiteMax = input("Insira o limite máximo para a captura de dados da velocidade de upload desse chip de rede: ")
     consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('velocidadeUpload', %s, %s, %s)" % (limiteMin, limiteMax, redeCadastrado)
     cursor.execute(consulta)
     mydb.commit()
