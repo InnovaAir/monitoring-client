@@ -272,7 +272,7 @@ def cadastrarRede(fkComputador):
     system = platform.system()
     if system == "Windows":
         especificacao = subprocess.check_output('wmic nic get Manufacturer, Name, Description', shell=True, text=True)
-        especificacao = especificacao.replace("  ", " ").strip().split("\n")[1].split("  ")[-1].strip()
+        especificacao = especificacao.strip().replace(" ", "").split("\n")[2]
     elif system == "Linux":
         especificacao = subprocess.check_output('lspci | grep -i ethernet', shell=True, text=True)
         especificacao = especificacao.split("Ethernet controller:")[-1].strip()
@@ -454,16 +454,16 @@ SELECT idComponente, componente, metrica, idMetrica, case when limiteMinimo is n
                         with open(filename, 'w', newline='') as csvfile:
                             csvwriter = csv.writer(csvfile)
                             csvwriter.writerows(dados)
-                        s3 = boto3.client(
-                           's3',
-                           aws_access_key_id='aws_access_key_id',
-                           aws_secret_access_key='aws_secret_access_key',
-                           region_name='region_name',
-                           aws_session_token='aws_session_token'
-                        )                       
-                        s3.upload_file(filename, 'lucasrawteste', filename)
+                        # s3 = boto3.client(
+                        #    's3',
+                        #    aws_access_key_id='aws_access_key_id',
+                        #    aws_secret_access_key='aws_secret_access_key',
+                        #    region_name='region_name',
+                        #    aws_session_token='aws_session_token'
+                        # )                       
+                    #     s3.upload_file(filename, 'lucasrawteste', filename)
             mydb.commit()
-        time.sleep(900)
+        time.sleep(10)
 
 
 
