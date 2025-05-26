@@ -1,3 +1,5 @@
+from gc import collect
+from tarfile import NUL
 import mysql.connector
 from mysql.connector import Error
 import psutil
@@ -7,6 +9,7 @@ import socket, platform, cpuinfo
 from datetime import datetime
 import csv
 import boto3
+import threading
 
 def menuInicial():
     saiu = False
@@ -88,7 +91,7 @@ def resgatarIdComputador():
                 # Consulta o banco de dados para encontrar o Computador com o MAC Address
                 consulta = "SELECT idMaquina FROM maquina WHERE numeroSerial = '%s'" % numeroSeriePlacaMae
                 cursor.execute(consulta)
-                print("Executando a consulta: %s" % consulta)
+                #print("Executando a consulta: %s" % consulta)
 
                 # Recupera o resultado da consulta
                 myresult = cursor.fetchall()
@@ -123,6 +126,13 @@ def home():
                 print("\nAté mais :)")
                 saiu = True
                 exit()
+                
+limiteMinCPU = 80
+limiteMaxCPU = 90
+limiteMinRAM = 80
+limiteMaxRAM = 90
+limiteMinDISCO = 80
+limiteMaxDISCO = 90
 
 def cadastrarCPU(fkComputador):
     print("\nCadastrando CPU...")
@@ -131,14 +141,12 @@ def cadastrarCPU(fkComputador):
     modelo =  cpuinfo.get_cpu_info()['brand_raw']
 
     consulta = "INSERT INTO componente (componente, especificacao, fkMaquina) VALUES ('%s', '%s', %s)" % ('Processador', modelo, fkComputador)
-    print("Executando a consulta SQL: '%s'", consulta)
+    #print("Executando a consulta SQL: '%s'", consulta)
     cursor.execute(consulta)
     mydb.commit()
     id_cpu_cadastrada = cursor._last_insert_id
     #Registrando métricas
-    limiteMin = input("Insira o limite mínimo para a captura de dados da porcentagem de uso dessa CPU: ")
-    limiteMax = input("Insira o limite máximo para a captura de dados da porcentagem de uso dessa CPU: ")
-    consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('porcentagemUso', %s, %s, %s)" % (limiteMin, limiteMax, id_cpu_cadastrada)
+    consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('porcentagemUso', %s, %s, %s)" % (limiteMinCPU, limiteMaxCPU, id_cpu_cadastrada)
     cursor.execute(consulta)
     consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('frequencia', null, null, %s)" % (id_cpu_cadastrada)
     cursor.execute(consulta)
@@ -147,10 +155,10 @@ def cadastrarCPU(fkComputador):
     consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('tempoAtividade', null, null, %s)" % (id_cpu_cadastrada)
     cursor.execute(consulta)
     mydb.commit()
-    fkMetrica = cursor._last_insert_id
-    frequencia = psutil.cpu_freq().max
-    consulta = "INSERT INTO captura_alerta (valorCapturado, fkMetrica, gravidade) VALUES (%s, %s, 'baixo')" % (frequencia, fkMetrica)
-    cursor.execute(consulta)
+    #fkMetrica = cursor._last_insert_id
+    #frequencia = psutil.cpu_freq().max
+    #consulta = "INSERT INTO captura_alerta (valorCapturado, fkMetrica, gravidade) VALUES (%s, %s, 'baixo')" % (frequencia, fkMetrica)
+    #cursor.execute(consulta)
     mydb.commit()
     print("\nCPU de id %d cadastrado\n" % id_cpu_cadastrada)
 
@@ -165,25 +173,23 @@ def cadastrarMemoria(fkComputador):
         especificacao = subprocess.check_output('sudo dmidecode --type memory | grep -i Manufacturer', shell=True, text=True)
         especificacao = especificacao.replace("\n","").replace(" ","").replace("Manufacturer:", "")[10:]
     consulta = "INSERT INTO componente (componente, especificacao, fkMaquina) VALUES ('%s', '%s', %s)" % ('RAM', especificacao, fkComputador)
-    print("Executando a consulta SQL: '%s'", consulta)
+    #print("Executando a consulta SQL: '%s'", consulta)
     cursor.execute(consulta)
     mydb.commit()
 
     id_memoria_cadastrada = cursor._last_insert_id
     #Registrando métricas
-    limiteMin = input("Insira o limite mínimo para a captura de dados da porcentagem de uso dessa RAM: ")
-    limiteMax = input("Insira o limite máximo para a captura de dados da porcentagem de uso dessa RAM: ")
-    consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('porcentagemUso', %s, %s, %s)" % (limiteMin, limiteMax, id_memoria_cadastrada)
+    consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('porcentagemUso', %s, %s, %s)" % (limiteMinRAM, limiteMaxRAM, id_memoria_cadastrada)
     cursor.execute(consulta)
     consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('processos', null, null, %s)" % (id_memoria_cadastrada)
     cursor.execute(consulta)
     consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('total', null, null, %s)" % (id_memoria_cadastrada)
     cursor.execute(consulta)
     mydb.commit()
-    total = psutil.virtual_memory().total
-    fkMetrica = cursor._last_insert_id
-    consulta = "INSERT INTO captura_alerta (valorCapturado, fkMetrica, gravidade) VALUES (%s, %s, 'baixo')" % (total, fkMetrica)
-    cursor.execute(consulta)
+    #total = psutil.virtual_memory().total
+    #fkMetrica = cursor._last_insert_id
+    #consulta = "INSERT INTO captura_alerta (valorCapturado, fkMetrica, gravidade) VALUES (%s, %s, 'baixo')" % (total, fkMetrica)
+    #cursor.execute(consulta)
     mydb.commit()
     print("memória de id %d cadastrado\n" % id_memoria_cadastrada)
 
@@ -222,7 +228,7 @@ def cadastrarDiscos(fkComputador):
                     """
                     parametros = ("Armazenamento", especificacao, fkComputador)
 
-                    print(f"Executando a consulta para cadastrar o disco: {disco_nome}...")
+                    #print(f"Executando a consulta para cadastrar o disco: {disco_nome}...")
 
                     cursor.execute(consulta, parametros)
                     mydb.commit()
@@ -249,17 +255,15 @@ def cadastrarDiscos(fkComputador):
                 cursor.execute(consulta, parametros)
                 mydb.commit()
                 id_disco_cadastrado = cursor.lastrowid
-                limiteMin = input("Insira o limite mínimo para a captura de dados da porcentagem de uso desse armazenamento: ")
-                limiteMax = input("Insira o limite máximo para a captura de dados da porcentagem de uso desse armazenamento: ")
-                consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('porcentagemUso', %s, %s, %s)" % (limiteMin, limiteMax, id_disco_cadastrado)
+                consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('porcentagemUso', %s, %s, %s)" % (limiteMinDISCO, limiteMaxDISCO, id_disco_cadastrado)
                 cursor.execute(consulta)
-                consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('total', %s, %s, %s)" % (limiteMin, limiteMax, id_disco_cadastrado)
+                consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('total', null, null, %s)" % (id_disco_cadastrado)
                 cursor.execute(consulta)
                 mydb.commit()
-                fkMetrica = cursor._last_insert_id
-                valorCaptura = psutil.disk_usage('C:/').total
-                consulta = "INSERT INTO captura_alerta (valorCapturado, fkMetrica, gravidade) VALUES (%s, %s, 'baixo')" % (valorCaptura, fkMetrica)
-                cursor.execute(consulta)
+                #fkMetrica = cursor._last_insert_id
+                #valorCaptura = psutil.disk_usage('C:/').total
+                #consulta = "INSERT INTO captura_alerta (valorCapturado, fkMetrica, gravidade) VALUES (%s, %s, 'baixo')" % (valorCaptura, fkMetrica)
+                #cursor.execute(consulta)
                 mydb.commit()
                 print(f"Disco de id {id_disco_cadastrado} cadastrado com sucesso!\n")
             except Exception as e:
@@ -277,17 +281,14 @@ def cadastrarRede(fkComputador):
         especificacao = subprocess.check_output('lspci | grep -i ethernet', shell=True, text=True)
         especificacao = especificacao.split("Ethernet controller:")[-1].strip()
     consulta = "INSERT INTO componente (componente, especificacao, fkMaquina) VALUES ('%s', '%s', %s)" % ('Rede', especificacao, fkComputador)
-    print("Executando a consulta SQL: '%s'", consulta)
+    #print("Executando a consulta SQL: '%s'", consulta)
     cursor.execute(consulta)
     mydb.commit()
     redeCadastrado = cursor._last_insert_id
-    limiteMin = input("Insira o limite mínimo para a captura de dados da velocidade de download desse chip de rede: ")
-    limiteMax = input("Insira o limite máximo para a captura de dados da velocidade de download desse chip de rede: ")
-    consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('velocidadeDownload', %s, %s, %s)" % (limiteMin, limiteMax, redeCadastrado)
+    consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('velocidadeDownload', null, null, %s)" % (redeCadastrado)
     cursor.execute(consulta)
-    limiteMin = input("Insira o limite mínimo para a captura de dados da velocidade de upload desse chip de rede: ")
-    limiteMax = input("Insira o limite máximo para a captura de dados da velocidade de upload desse chip de rede: ")
-    consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('velocidadeUpload', %s, %s, %s)" % (limiteMin, limiteMax, redeCadastrado)
+
+    consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('velocidadeUpload', null, null, %s)" % (redeCadastrado)
     cursor.execute(consulta)
     mydb.commit()
     print(f"Chip de rede de id {redeCadastrado} cadastrado com sucesso!\n")
@@ -313,7 +314,7 @@ def cadastrarMaquina():
 def verificarMaquinaCadastrada():
                 consulta = "SELECT * FROM maquina WHERE numeroSerial = '%s'" % obterSerialPlacaMae()
                 cursor.execute(consulta)
-                print("Executando a consulta: %s" % consulta)
+                #print("Executando a consulta: %s" % consulta)
                 myresult = cursor.fetchall()
                 if (len(myresult) > 0):
                     print("Máquina encontrada no sistema")
@@ -454,16 +455,16 @@ SELECT idComponente, componente, metrica, idMetrica, case when limiteMinimo is n
                         with open(filename, 'w', newline='') as csvfile:
                             csvwriter = csv.writer(csvfile)
                             csvwriter.writerows(dados)
-                        # s3 = boto3.client(
-                        #    's3',
-                        #    aws_access_key_id='aws_access_key_id',
-                        #    aws_secret_access_key='aws_secret_access_key',
-                        #    region_name='region_name',
-                        #    aws_session_token='aws_session_token'
-                        # )                       
-                    #     s3.upload_file(filename, 'lucasrawteste', filename)
+                        s3 = boto3.client(
+                            's3',
+                            aws_access_key_id='aws_access_key_id',
+                            aws_secret_access_key='aws_secret_access_key',
+                            region_name='region_name',
+                            aws_session_token='aws_session_token'
+                        )                       
+                        s3.upload_file(filename, 'lucasrawteste', filename)
             mydb.commit()
-        time.sleep(10)
+        time.sleep(20)
 
 
 
@@ -496,22 +497,17 @@ def exibirDadosComputacionais():
 
 
 try:
-    mydb = mysql.connector.connect(
-        host="localhost",
-        user="innova_client",
-        password="Innovaair@123",
-        database="innovaair"
-    )
+    mydb = mysql.connector.MySQLConnection(
+        host="127.0.0.1",
+        user="root",
+        password="urubu100",
+        database="innovaair",
+        auth_plugin="mysql_native_password",
+        port=3307)
+    
     cursor = mydb.cursor()
 
-    menuInicial()
 except Error as e:
     print("Houve um problema com a comunicação com o banco de dados\n")
     print(e)
     exit(0)
-
-
-
-
-
-
