@@ -18,15 +18,14 @@ threadEscutarPorta.daemon = True
 threadEnviarDadosRota.daemon = True
 
 print("SERÁ INICIADO A EXECUÇÃO DAS COLETAS DOS DADOS:")
-print("\n   CASO DESEJE PARA A EXECUÇÃO DO ARQUIVO: PRESSIONE C \n\n")
+print("\n   CASO DESEJE PARA A EXECUÇÃO DO ARQUIVO: PRESSIONE C + V'\n\n")
 
 threadColetarDadosMaquina.start()
-time.sleep(2)
 threadEscutarPorta.start()
 threadEnviarDadosRota.start()
 
 while True:
-    if kb.is_pressed('m'):
+    if kb.is_pressed('c') and kb.is_pressed('v'):
         print("\n\nTECLA E FOI PRESSIONADA \n SAINDO...")
-        time.sleep(0.05)
+        time.sleep(0.025)
         exit()

@@ -11,6 +11,7 @@ import threading
 import psutil
 import platform
 
+
 def obterSerialPlacaMae():
     try:
         if psutil.WINDOWS:
@@ -45,22 +46,28 @@ def obterSerialPlacaMae():
         print(f"Erro ao obter número de série da placa-mãe: {e}")
         return None
 
+def obterEnderecoIP():
+    interfaces = psutil.net_if_addrs()
+    
+    for interface_name, interface_addresses in interfaces.items():
+        for address in interface_addresses:
+            if str(address.family) == 'AddressFamily.AF_INET':
+                ip = address.address
+                # Retorna o primeiro IP que não seja localhost
+                if ip != '127.0.0.1' and not ip.startswith('169.254'):
+                    return ip
+    
+    return '127.0.0.1'  # Fallback para localhost
+
 # Criação do API Flask
 app = Flask(__name__)
 
 @app.get('/cache')
 def usage_cache():
     
-    if (request.remote_addr != '10.18.33.61'):
-        return "Acesso negado" 
-
-    print("Capturando total de Espaço usado em Cache")
-
-    querry = subprocess.run(["du", "-hs", "/etc"], shell=True, capture_output=True, text=True).stdout.strip()
-    espacoUsado = querry.split()[0]
-
-    mensagem = f"O espaço que está sendo utilizado é: {espacoUsado}"
-    return mensagem
+    # if (request.remote_addr != '10.18.33.61'):
+    #     return "Acesso negado" 
+    return "oi vaga"
 
 @app.delete('/kill')
 def kill_process():
@@ -78,8 +85,7 @@ def kill_process():
     return mensagem
 
 def enviarDados():
-
-    while True:
+    while True:        
         arrayDados = {'cpu':[],'ram':[],'disco':[],'rede':[]}
 
         # Captura de dados de máquina a cada
@@ -102,6 +108,9 @@ def enviarDados():
         comando = ''
         processos = ''
         
+        # Captura o endereço de IP
+        ipTotem = obterEnderecoIP()
+
         # Busca ds 5 Maiores Processos
         if (psutil.WINDOWS):
             comando = """
@@ -112,13 +121,12 @@ def enviarDados():
             @{Name="Uptime";Expression={(Get-Date) - $_.StartTime}}, 
             Id"""
             processos = subprocess.run(["powershell", "-Command", comando], capture_output=True, text=False).stdout.strip()
-
         elif (psutil.LINUX):
             comando = "ps -eo pid,comm,%cpu,%mem,time --sort=-%cpu | head -n 6"
             processos = subprocess.run(comando, shell=True, capture_output=True, text=False).stdout.strip().split()
         # Transformando o Byte para String e separando pelos os espaços de '\r\n'
         processos = processos.decode("utf-8").split('\r\n')
-    
+
         # Apagando os espaços vazios do array
         i = 0    
         while i < len(processos):
@@ -149,21 +157,23 @@ def enviarDados():
 
         # Envia os dados de processos tratados
         ip = 'localhost'
-        url = f"http://{ip}:3333/dados/tempoReal"
+        url = f"http://{ip}:3333/dados/enviarDados"
         headers = {"Content-Type":"application/json"}
         
+        momento = datetime.datetime.now()
         placa_mae = obterSerialPlacaMae()
 
         if (placa_mae == None): return 'Serial Placa-Mãe nulo'
 
+        print(momento)
+
         try:
-            requests.post(url, json={'placa_mae':placa_mae, 'momento':f'{datetime.datetime.now()}', 'processos':arrayProcessos, 'dados':arrayDados}, headers=headers)
+            requests.post(url, json={'placa_mae':placa_mae, 'ip':ipTotem, 'hostname':platform.node(),'momento':f'{momento}', 'processos':arrayProcessos, 'dados':arrayDados}, headers=headers)
         except:
             print("Erro ao enviar dados ao Web-Data-Viz")
-            
-        time.sleep(20)
+
 
 # Rodando o servidor
 def rodarServer():
     if __name__ == '__main__':
-        app.run(port=5000, host='localhost', debug=False)    
+        app.run(port=5000, host='0.0.0.0', debug=False)    

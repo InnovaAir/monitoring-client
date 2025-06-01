@@ -285,10 +285,10 @@ def cadastrarRede(fkComputador):
     cursor.execute(consulta)
     mydb.commit()
     redeCadastrado = cursor._last_insert_id
-    consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('velocidadeDownload', null, null, %s)" % (redeCadastrado)
+    consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('velocidadeDownload', 15, 5, %s)" % (redeCadastrado)
     cursor.execute(consulta)
 
-    consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('velocidadeUpload', null, null, %s)" % (redeCadastrado)
+    consulta = "INSERT INTO metrica (metrica, limiteMinimo, limiteMaximo, fkComponente) VALUES ('velocidadeUpload', 15, 5, %s)" % (redeCadastrado)
     cursor.execute(consulta)
     mydb.commit()
     print(f"Chip de rede de id {redeCadastrado} cadastrado com sucesso!\n")
