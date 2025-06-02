@@ -1,0 +1,7 @@
+flask
+requests
+psutil
+mysql-connector-python
+boto3
+py-cpuinfo
+keyboard
