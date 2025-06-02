@@ -5,12 +5,26 @@ from traceback import print_tb
 from flask import Flask, request
 import subprocess
 import requests
-import datetime
 import time
 import threading
 import psutil
 import platform
+import time
+from datetime import datetime, timedelta
 
+def get_uptime_psutil():
+    boot_time = psutil.boot_time()
+    current_time = time.time()
+    uptime_seconds = current_time - boot_time
+    
+    # Converte para formato legível
+    uptime = timedelta(seconds=uptime_seconds)
+    
+    return {
+        'seconds': uptime_seconds,
+        'formatted': str(uptime).split('.')[0],  # Remove microssegundos
+        'boot_time': datetime.fromtimestamp(boot_time).strftime('%Y-%m-%d %H:%M:%S')
+    }
 
 def obterSerialPlacaMae():
     try:
@@ -114,7 +128,7 @@ def enviarDados():
         # Busca ds 5 Maiores Processos
         if (psutil.WINDOWS):
             comando = """
-            Get-Process | Sort-Object CPU -Descending | Select-Object -First 5 `
+            Get-Process | Sort-Object CPU -Descending | Select-Object -First 10 `
             @{Name="ProcessName";Expression={$_.ProcessName}}, 
             @{Name="CPU(s)";Expression={[math]::Round($_.CPU,2)}}, 
             @{Name="Memory(MB)";Expression={[math]::Round($_.WorkingSet64 / 1MB, 2)}}, 
@@ -160,7 +174,7 @@ def enviarDados():
         url = f"http://{ip}:3333/dados/enviarDados"
         headers = {"Content-Type":"application/json"}
         
-        momento = datetime.datetime.now()
+        momento = datetime.now()
         placa_mae = obterSerialPlacaMae()
 
         if (placa_mae == None): return 'Serial Placa-Mãe nulo'
@@ -168,7 +182,7 @@ def enviarDados():
         print(momento)
 
         try:
-            requests.post(url, json={'placa_mae':placa_mae, 'ip':ipTotem, 'hostname':platform.node(),'momento':f'{momento}', 'processos':arrayProcessos, 'dados':arrayDados}, headers=headers)
+            requests.post(url, json={'placa_mae':placa_mae, 'ip':ipTotem, 'hostname':platform.node(),'momento':f'{momento}', 'processos':arrayProcessos, 'dados':arrayDados, 'tempoAtivo':get_uptime_psutil()["seconds"]}, headers=headers)
         except:
             print("Erro ao enviar dados ao Web-Data-Viz")
 
