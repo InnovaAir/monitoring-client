@@ -295,12 +295,14 @@ def cadastrarRede(fkComputador):
     
 
 def cadastrarMaquina():
+    print
+    modelo = input("Digite o modelo desta máquina (Em letra minuscula): ")
     hostname = socket.gethostname()
     endereco_mac = psutil.net_if_addrs()["Ethernet"][0].address
     numero_serie = obterSerialPlacaMae()
     print('\nCadastrando a máquina no banco de dados:\nNumero Serial: %s\nHostname: %s\nEndereço MAC %s' % (numero_serie, endereco_mac, hostname))
     fkFilial = int(input("Insira o id da filial a qual essa máquina pertence: "))
-    consulta = "INSERT INTO maquina(numeroSerial, enderecoMac, hostname, fkFilial) VALUES ('%s', '%s', '%s', %s)" % (numero_serie, endereco_mac, hostname, fkFilial)
+    consulta = "INSERT INTO maquina(numeroSerial, enderecoMac, hostname, fkFilial, modelo) VALUES ('%s', '%s', '%s', %s, '%s')" % (numero_serie, endereco_mac, hostname, fkFilial, modelo)
     cursor.execute(consulta)
     mydb.commit()
     id_Computador_cadastrado = cursor._last_insert_id

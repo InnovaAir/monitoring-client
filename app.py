@@ -178,9 +178,6 @@ def enviarDados():
         placa_mae = obterSerialPlacaMae()
 
         if (placa_mae == None): return 'Serial Placa-Mãe nulo'
-
-        print(momento)
-
         try:
             requests.post(url, json={'placa_mae':placa_mae, 'ip':ipTotem, 'hostname':platform.node(),'momento':f'{momento}', 'processos':arrayProcessos, 'dados':arrayDados, 'tempoAtivo':get_uptime_psutil()["seconds"]}, headers=headers)
         except:
