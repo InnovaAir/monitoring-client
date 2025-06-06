@@ -501,6 +501,7 @@ def exibirDadosComputacionais():
 try:
     mydb = mysql.connector.MySQLConnection(
         host="127.0.0.1",
+        #host="54.88.166.135",
         user="root",
         password="urubu100",
         database="innovaair",

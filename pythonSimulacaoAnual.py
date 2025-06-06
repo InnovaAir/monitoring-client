@@ -34,14 +34,15 @@ metricas = [
 # SE NO timedelta() ESTIVER 30 VAI SIMULAR DADOS DOS ULTIMOS 30 DIAS SE TIVER 365 VAI SIMULAR
 # DADOS DOS ULTIMOS 365 DIAS
 now = datetime.now()
-start_time = now - timedelta(days=365)
+start_time = now - timedelta(days=180)
 
 # USAMOS UM FOR APRIMORADO E DECLARAMOS QUE PARA CADA CONJUNTO QUER PERCORRERMOS A PRIMEIRA VARIÁVEL
 #  É O ID DA MÉTRICA A SEGUNDA É O LIMITE MINIMO E A TERCEIRA O LIMITE MAXIMO
+
 for metrica_id, limite_min, limite_max in metricas:
     # AQUI DECLARAMOS QUANTOS INSERTS QUEREMOS PARA CADA METRICA SE QUISER FAZER APENAS UMA SIMULAÇÃO RÁPIDA DEIXE ALGO PEQUENO
     #  COMO 500
-    num_inserts = 35040
+    num_inserts = 350
     # DEFINIMOS O LIMITEMEDIO
     meio = (limite_min + limite_max) / 2
 
@@ -60,14 +61,10 @@ for metrica_id, limite_min, limite_max in metricas:
             gravidade = 'critico'
         else:
             gravidade = 'nulo'
+        
         # PEGAMOS O DATETIME ATUAL
         momento = start_time + timedelta(seconds=random.randint(0, int((now - start_time).total_seconds())))
-        # INSERIMOS OS DADOS NA TABELA DADOS_PREVISAO
-        insert = (
-          f"INSERT INTO dados_previsao (valorPrevisto, momento, gravidade, fkMetrica, isPrevisao) "
-          f"VALUES ({valor}, '{momento.strftime('%Y-%m-%d %H:%M:%S')}', '{gravidade}', {metrica_id}, 0);"
-        )
-        cursor.execute(insert)
+        
         # TAMBÉM CASO GRAVIDADE NÃO SEJA NULO INSERIMOS EM CAPTURA_ALERTA
         if(gravidade != 'nulo'):
             insert = (
@@ -75,4 +72,5 @@ for metrica_id, limite_min, limite_max in metricas:
             f"VALUES ({valor}, '{momento.strftime('%Y-%m-%d %H:%M:%S')}', '{gravidade}', {metrica_id});"
             )
             cursor.execute(insert)
+            
         mydb.commit()

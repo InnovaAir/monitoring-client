@@ -60,6 +60,8 @@ def obterSerialPlacaMae():
         print(f"Erro ao obter número de série da placa-mãe: {e}")
         return None
 
+
+
 def obterEnderecoIP():
     interfaces = psutil.net_if_addrs()
     
@@ -103,19 +105,23 @@ def enviarDados():
         arrayDados = {'cpu':[],'ram':[],'disco':[],'rede':[]}
 
         # Captura de dados de máquina a cada
-        # Gera um array com 6 dados = 1 minuto
+        # Gera um array com 6 dados = 1 minufto
         i = 0
         while (i < 1):
 
             cpuPorcentagemUso = psutil.cpu_percent(interval=None)
             ramPorcentagemUso = psutil.virtual_memory().percent
             discoPorcentagemUso = psutil.disk_usage('/').percent       
-            redeDownload1 = psutil.net_io_counters().bytes_sent
-
+            # Para DOWNLOAD (recebimento)
+            bytes_inicial = psutil.net_io_counters().bytes_recv
+            time.sleep(1)
+            bytes_final = psutil.net_io_counters().bytes_recv
+            bytes_por_segundo = bytes_final - bytes_inicial
+                
             arrayDados["cpu"].append(cpuPorcentagemUso)
             arrayDados["ram"].append(ramPorcentagemUso)
             arrayDados["disco"].append(discoPorcentagemUso)
-            arrayDados["rede"].append(redeDownload1)
+            arrayDados["rede"].append(bytes_por_segundo)
             
             i = i + 1
         
@@ -170,16 +176,18 @@ def enviarDados():
             del arrayTratamento[:5]
 
         # Envia os dados de processos tratados
-        ip = 'localhost'
+        ip = '127.0.0.1'
         url = f"http://{ip}:3333/dados/enviarDados"
         headers = {"Content-Type":"application/json"}
         
         momento = datetime.now()
+        print(momento)
         placa_mae = obterSerialPlacaMae()
 
+        time.sleep(4)
         if (placa_mae == None): return 'Serial Placa-Mãe nulo'
         try:
-            requests.post(url, json={'placa_mae':placa_mae, 'ip':ipTotem, 'hostname':platform.node(),'momento':f'{momento}', 'processos':arrayProcessos, 'dados':arrayDados, 'tempoAtivo':get_uptime_psutil()["seconds"]}, headers=headers)
+            requests.post(url, json={'placa_mae':placa_mae, 'ip':ipTotem, 'hostname':platform.node(),'momento':f'{momento}', 'processos':arrayProcessos, 'dados':arrayDados, 'tempoAtivo':get_uptime_psutil()["seconds"]})
         except:
             print("Erro ao enviar dados ao Web-Data-Viz")
 
