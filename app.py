@@ -176,15 +176,15 @@ def enviarDados():
             del arrayTratamento[:5]
 
         # Envia os dados de processos tratados
-        ip = '127.0.0.1'
-        url = f"http://{ip}:3333/dados/enviarDados"
+        ip = '34.235.36.157'
+        url = f"http://{ip}:8080/dados/enviarDados"
         headers = {"Content-Type":"application/json"}
         
         momento = datetime.now()
         print(momento)
         placa_mae = obterSerialPlacaMae()
 
-        time.sleep(4)
+        time.sleep(59)
         if (placa_mae == None): return 'Serial Placa-Mãe nulo'
         try:
             requests.post(url, json={'placa_mae':placa_mae, 'ip':ipTotem, 'hostname':platform.node(),'momento':f'{momento}', 'processos':arrayProcessos, 'dados':arrayDados, 'tempoAtivo':get_uptime_psutil()["seconds"]})

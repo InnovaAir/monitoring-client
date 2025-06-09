@@ -459,14 +459,14 @@ SELECT idComponente, componente, metrica, idMetrica, case when limiteMinimo is n
                             csvwriter.writerows(dados)
                         s3 = boto3.client(
                             's3',
-                            aws_access_key_id='aws_access_key_id',
-                            aws_secret_access_key='aws_secret_access_key',
-                            region_name='region_name',
-                            aws_session_token='aws_session_token'
+                            aws_access_key_id='',
+                            aws_secret_access_key='',
+                            region_name='',
+                            aws_session_token=''
                         )                       
-                        s3.upload_file(filename, 'lucasrawteste', filename)
+                        s3.upload_file(filename, 'innovaair-raw', filename)
             mydb.commit()
-        time.sleep(20)
+        time.sleep(56)
 
 
 
@@ -500,13 +500,13 @@ def exibirDadosComputacionais():
 
 try:
     mydb = mysql.connector.MySQLConnection(
-        host="127.0.0.1",
+        host="34.235.36.157",
         #host="54.88.166.135",
         user="root",
         password="urubu100",
         database="innovaair",
         auth_plugin="mysql_native_password",
-        port=3307)
+        port=3306)
     
     cursor = mydb.cursor()
 
