@@ -10,18 +10,15 @@ import client
 import app
 
 threadColetarDadosMaquina = threading.Thread(target=client.menuInicial)
-threadEscutarPorta = threading.Thread(target=app.rodarServer)
 threadEnviarDadosRota = threading.Thread(target=app.enviarDados)
 
 threadColetarDadosMaquina.daemon = True
-threadEscutarPorta.daemon = True
 threadEnviarDadosRota.daemon = True
 
 print("SERÁ INICIADO A EXECUÇÃO DAS COLETAS DOS DADOS:")
 print("\n   CASO DESEJE PARA A EXECUÇÃO DO ARQUIVO: PRESSIONE C + V'\n\n")
 
 threadColetarDadosMaquina.start()
-threadEscutarPorta.start()
 threadEnviarDadosRota.start()
 
 while True:
